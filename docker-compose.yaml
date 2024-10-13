@@ -1,0 +1,15 @@
+services:
+  dailymart-db:
+    image: postgres:latest
+    container_name: dailymart-db
+    environment:
+      - POSTGRES_USER=dailymart
+      - POSTGRES_PASSWORD=dailymart@123
+      - POSTGRES_DB=dailymart
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5555:5432'
+
+volumes:
+  postgres_data:
