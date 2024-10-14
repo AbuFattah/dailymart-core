@@ -6,7 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/typeorm/entities/User.entity';
 import { hashPassword } from 'src/utils/bcrypt';
-import { CreateUserParams, UpdateUserParams } from 'src/utils/types';
+import {
+  CreateUserParams,
+  UpdatePassParams,
+  UpdateUserParams,
+} from 'src/utils/types';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -38,7 +42,16 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findById(id: number): Promise<User> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
   async update(id: number, userDetails: UpdateUserParams) {
     return await this.userRepository.update({ id }, { ...userDetails });
+  }
+
+  async updatePassword(id: number, passwordDetails: UpdatePassParams) {
+    const password = hashPassword(passwordDetails.password);
+    return await this.userRepository.update({ id }, { password });
   }
 }

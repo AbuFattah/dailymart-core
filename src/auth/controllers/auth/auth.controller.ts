@@ -26,9 +26,10 @@ export class AuthController {
       body.password,
     );
 
-    res.cookie('Authentication', access_token, {
+    res.cookie('jwt', access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
     });
 
     return { message: 'Logged in successfully' };

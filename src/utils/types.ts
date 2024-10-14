@@ -7,7 +7,11 @@ export type CreateUserParams = {
 };
 
 export type UpdateUserParams = {
-  password?: string;
   profile?: string;
-  address?: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+};
+
+export type UpdatePassParams = {
+  password: string;
 };

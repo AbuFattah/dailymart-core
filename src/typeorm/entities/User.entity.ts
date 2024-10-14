@@ -26,5 +26,8 @@ export class User {
   createdAt: Date;
 
   @Column({ nullable: true })
-  address: string;
+  billingAddress: string;
+
+  @Column({ nullable: true })
+  shippingAddress: string;
 }
