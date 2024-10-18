@@ -7,6 +7,7 @@ import { User } from './typeorm/entities/User.entity';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import * as path from 'path';
+import { CatalogModule } from './catalog/catalog.module';
 
 // @Module({
 //   imports: [
@@ -52,6 +53,7 @@ import * as path from 'path';
     }),
     UsersModule,
     AuthModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
