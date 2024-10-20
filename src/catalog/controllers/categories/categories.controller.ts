@@ -7,6 +7,8 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { CreateCategoryDto } from 'src/catalog/dtos/CreateCategory.dto';
 import { CreateDepartmentDto } from 'src/catalog/dtos/CreateDepartment.dto';
@@ -15,12 +17,19 @@ import { CreateSubcategoryParamsDto } from 'src/catalog/dtos/CreateSubcategoryPa
 import { CategoriesService } from 'src/catalog/services/categories/categories.service';
 import { isValidObjectId } from 'mongoose';
 import { CategoryHierarchy } from 'src/catalog/mongoose/schemas/Categories.schema';
+import { ValidateMongoIdPipe } from 'src/catalog/pipes/ValidateMongoId.pipe';
+import { UpdateDepartmentNameDto } from 'src/catalog/dtos/UpdateDepartmentDto';
 
 @Controller('categoryHierarchy')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   // Create a department with categories and subcategories
+  @Get('')
+  async getCategoriesHierarchy() {
+    return this.categoriesService.getCategoriesHierarchy();
+  }
+
   @Post('department')
   async createDepartment(
     @Body() createDepartmentDto: CreateDepartmentDto,
@@ -28,23 +37,43 @@ export class CategoriesController {
     return this.categoriesService.createDepartment(createDepartmentDto);
   }
 
-  @Get('department/:categoryId')
-  async findDepartmentByCategoryId(
-    @Param('categoryId') categoryId: string,
-  ): Promise<CategoryHierarchy> {
-    if (!isValidObjectId(categoryId)) {
-      throw new HttpException(
-        'Invalid category ID format',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  // get all depts including inactive
+  @Get('allDepartments')
+  async getDepartmentWithChildren() {
+    return this.categoriesService.getDepartmentWithChildren();
+  }
 
+  @Get('department/:departmentId')
+  async getDepartmentById(
+    @Param('departmentId', ValidateMongoIdPipe) departmentId: string,
+  ) {
+    return this.categoriesService.getDepartmentById(departmentId);
+  }
+  @Get('department/category/:categoryId')
+  async getDepartmentByCategoryId(
+    @Param('categoryId', ValidateMongoIdPipe) categoryId: string,
+  ) {
     return this.categoriesService.getDepartmentByCategoryId(categoryId);
   }
 
+  @Patch('department')
+  async updateDepartmentName(
+    @Body() updateDepartementDto: UpdateDepartmentNameDto,
+  ): Promise<{ id: string; name: string }> {
+    const { id, name } = updateDepartementDto;
+    return this.categoriesService.updateDepartmentName(id, name);
+  }
+
+  @Delete('department/:departmentId')
+  async deleteDepartment(
+    @Param('departmentId', ValidateMongoIdPipe) departmentId: string,
+  ): Promise<{ departmentId: string; name: string; status: string }> {
+    return this.categoriesService.deleteDepartment(departmentId);
+  }
+
   @Post('category/:departmentId')
-  async createCategory(
-    @Param('departmentId') departmentId: string,
+  async createCategoryInDepartment(
+    @Param('departmentId', ValidateMongoIdPipe) departmentId: string,
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryHierarchy> {
     return this.categoriesService.createCategory(
@@ -53,15 +82,36 @@ export class CategoriesController {
     );
   }
 
-  @Post('subcategory/:departmentId/:categoryId')
+  @Get('category/:id')
+  async getCategorybyId(@Param('id', ValidateMongoIdPipe) id: string) {
+    return this.categoriesService.getCategorybyId(id);
+  }
+  @Get('subcategory/:id')
+  async getSubcategorybyId(@Param('id', ValidateMongoIdPipe) id: string) {
+    return this.categoriesService.getSubcategorybyId(id);
+  }
+  @Get('category/department/:departmentId')
+  async getCategoriesByDepartmentId(
+    @Param('departmentId', ValidateMongoIdPipe) departmentId: string,
+  ) {
+    return this.categoriesService.getCategoriesByDepartmentId(departmentId);
+  }
+
+  @Get('subcategory/category/:categoryId')
+  async getsubcategoriesByCategoryId(
+    @Param('categoryId', ValidateMongoIdPipe) categoryId: string,
+  ) {
+    return this.categoriesService.getsubcategoriesByCategoryId(categoryId);
+  }
+
+  @Post('subcategory/:categoryId')
   async createSubcategory(
     @Param() params: CreateSubcategoryParamsDto,
     @Body() createSubcategoryDto: CreateSubcategoryDto,
-  ): Promise<CategoryHierarchy> {
-    const { categoryId, departmentId } = params;
+  ) {
+    const { categoryId } = params;
 
-    return this.categoriesService.createSubcategory(
-      departmentId,
+    return this.categoriesService.createSubcategoryByCategoryId(
       categoryId,
       createSubcategoryDto,
     );

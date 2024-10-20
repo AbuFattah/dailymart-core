@@ -6,7 +6,7 @@ export class CreateSubcategoryDto {
 
   @IsOptional()
   @IsMongoId()
-  _id?: string;
+  id?: string;
 
   @IsNotEmpty()
   status: 'active' | 'inactive';

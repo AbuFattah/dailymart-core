@@ -12,7 +12,7 @@ class Subcategory {
 }
 
 @Schema({ id: true })
-class Category {
+export class Category {
   @Prop({ required: true })
   name: string;
 

@@ -7,12 +7,12 @@ export class CreateCategoryDto {
 
   @IsArray()
   @IsOptional()
-  subcategories?: CreateSubcategoryDto[];
+  subcategories?: CreateSubcategoryDto[] = [];
 
   @IsMongoId()
   @IsOptional()
   _id?: string;
 
   @IsNotEmpty()
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' = 'active';
 }
