@@ -27,7 +27,7 @@ export class UsersService {
       const user = this.userRepository.create({
         ...userDetails,
         password,
-        createdAt: new Date(),
+        created_at: new Date(),
       });
       return await this.userRepository.save(user);
     } catch (error) {

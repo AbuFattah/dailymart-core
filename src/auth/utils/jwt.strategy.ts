@@ -10,7 +10,7 @@ export type JwtPayload = {
   // password: string;
   role: string;
   profile: string;
-  createdAt: string;
+  created_at: string;
   billingAddress: string;
   shippingAddress: string;
 };
@@ -44,7 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: user.role,
       profile: user.profile,
       // password: user.password,
-      createdAt: user.createdAt.toISOString(),
+      createdAt: user.created_at.toISOString(),
       shippingAddress: user.shippingAddress,
       bilingAddress: user.billingAddress,
     };

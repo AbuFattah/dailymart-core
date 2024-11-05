@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import * as path from 'path';
 import { CatalogModule } from './catalog/catalog.module';
+import { Product } from './catalog/typeorm/entities/Product.entity';
+import { ProductsCategories } from './catalog/typeorm/entities/Products_Categories.entity';
 
 // @Module({
 //   imports: [
@@ -50,7 +52,7 @@ import { CatalogModule } from './catalog/catalog.module';
       username: 'dailymart',
       password: 'dailymart@123',
       synchronize: true,
-      entities: [User],
+      entities: [User, Product, ProductsCategories],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     UsersModule,

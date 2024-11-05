@@ -13,6 +13,9 @@ export class CreateCategoryDto {
   @IsOptional()
   _id?: string;
 
+  @IsOptional()
+  filter: string[];
+
   @IsNotEmpty()
   status: 'active' | 'inactive' = 'active';
 }

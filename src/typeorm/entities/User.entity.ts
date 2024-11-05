@@ -22,8 +22,11 @@ export class User {
   @Column({ default: '' })
   profile: string;
 
-  @Column()
-  createdAt: Date;
+  @Column({ default: new Date() })
+  created_at: Date;
+
+  @Column({ default: new Date() })
+  Updated_at: Date;
 
   @Column({ nullable: true })
   billingAddress: string;

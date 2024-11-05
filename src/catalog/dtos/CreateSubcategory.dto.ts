@@ -8,6 +8,9 @@ export class CreateSubcategoryDto {
   @IsMongoId()
   id?: string;
 
+  @IsOptional()
+  filter: string[];
+
   @IsNotEmpty()
   status: 'active' | 'inactive';
 }

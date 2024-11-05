@@ -7,6 +7,9 @@ class Subcategory {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ type: [String], default: ['brand', 'type', 'size'] })
+  filter: string[];
+
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: 'active' | 'inactive';
 }
@@ -18,6 +21,9 @@ export class Category {
 
   @Prop({ type: [Subcategory], default: [] })
   subcategories: Types.DocumentArray<Subcategory>;
+
+  @Prop({ type: [String], default: ['brand', 'type', 'size'] })
+  filter: string[];
 
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: 'active' | 'inactive';
@@ -31,6 +37,9 @@ export class CategoryHierarchy extends Document {
 
   @Prop({ type: [Category], default: [] })
   categories: Types.DocumentArray<Category>;
+
+  @Prop({ type: [String], default: ['brand', 'type', 'size'] })
+  filter: string[];
 
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: 'active' | 'inactive';

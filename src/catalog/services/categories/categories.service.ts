@@ -5,18 +5,14 @@ import {
   HttpStatus,
   NotFoundException,
   InternalServerErrorException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateCategoryDto } from 'src/catalog/dtos/CreateCategory.dto';
 import { CreateDepartmentDto } from 'src/catalog/dtos/CreateDepartment.dto';
 import { CreateSubcategoryDto } from 'src/catalog/dtos/CreateSubcategory.dto';
-import { UpdateDepartmentNameDto } from 'src/catalog/dtos/UpdateDepartmentDto';
-import {
-  Category,
-  CategoryHierarchy,
-} from 'src/catalog/mongoose/schemas/Categories.schema';
-import { CategoryType } from 'src/catalog/Types';
+import { CategoryHierarchy } from 'src/catalog/mongoose/schemas/Categories.schema';
 
 @Injectable()
 export class CategoriesService {
@@ -189,6 +185,17 @@ export class CategoriesService {
     departmentId: string,
     createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryHierarchy> {
+    const existingCategory = await this.categoriesModel.findOne({
+      _id: departmentId,
+      'categories.name': createCategoryDto.name,
+    });
+
+    if (existingCategory) {
+      throw new ConflictException(
+        `Category ${createCategoryDto.name} already exists`,
+      );
+    }
+
     const department = await this.categoriesModel.findById(departmentId);
     if (!department) {
       throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
@@ -217,7 +224,7 @@ export class CategoriesService {
       throw new NotFoundException('Error fetching categories ' + error);
     }
   }
-  async getsubcategoriesByCategoryId(categoryId: string) {
+  async getSubcategoriesByCategoryId(categoryId: string) {
     try {
       const department = await this.categoriesModel.findOne(
         { 'categories._id': categoryId },
@@ -299,6 +306,17 @@ export class CategoriesService {
     createSubcategoryDto: CreateSubcategoryDto,
   ) {
     try {
+      const existingSubcategory = await this.categoriesModel.findOne({
+        'categories._id': new Types.ObjectId(categoryId),
+        'categories.subcategories.name': createSubcategoryDto.name,
+      });
+
+      if (existingSubcategory) {
+        throw new ConflictException(
+          `Subcategory with name "${createSubcategoryDto.name}" already exists in this category`,
+        );
+      }
+
       const result = await this.categoriesModel.findOneAndUpdate(
         { 'categories._id': new Types.ObjectId(categoryId) },
         {
@@ -329,7 +347,10 @@ export class CategoriesService {
         category: updatedCategory,
       };
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
         throw error;
       }
       console.error('Error creating subcategory:', error);
