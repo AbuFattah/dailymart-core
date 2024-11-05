@@ -1,4 +1,12 @@
-import { Column, Double, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
+import {
+  Column,
+  Double,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'products' })
 export class Product {
@@ -7,6 +15,9 @@ export class Product {
 
   @Column()
   name: string;
+
+  @Column({ default: true })
+  isJit: boolean;
 
   @Column({ nullable: true })
   sku: string;
@@ -46,6 +57,10 @@ export class Product {
 
   @Column()
   color: string;
+
+  @OneToOne(() => Inventory, (inventory) => inventory.product)
+  @JoinColumn({ name: 'inventory_id' })
+  inventory: Inventory;
 
   @Column()
   created_at: Date;

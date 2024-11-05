@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateProductDto } from 'src/catalog/dtos/products/UpdateProduct.dto';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { CreateProductParams, UpdateProductParams } from 'src/catalog/Types';
+import { ProductWithInventoryDto } from 'src/inventory/dtos/ProductWithInventoryDto';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -85,7 +86,11 @@ export class ProductsService {
         );
       }
 
-      const updatedProduct = { ...product, ...updateProductsDetails };
+      const updatedProduct = {
+        ...product,
+        ...updateProductsDetails,
+        updated_at: new Date(),
+      };
       const savedProduct = this.productRepository.save(updatedProduct);
       return savedProduct;
       //
@@ -117,4 +122,21 @@ export class ProductsService {
       );
     }
   }
+
+  // async getProductWithInventoryQty(
+  //   productId: number,
+  // ): Promise<ProductWithInventoryDto> {
+  //   const productWithInventoryQty = await this.productRepository
+  //     .createQueryBuilder('product')
+  //     .leftJoin('product.inventory', 'inventory')
+  //     .where('product.id = :productId', { productId })
+  //     .select(['product.id', 'product.name', 'product.brand', 'inventory.qty'])
+  //     .getOne();
+
+  //   if (!productWithInventoryQty) {
+  //     throw new NotFoundException(`Product not found for ID: ${productId}`);
+  //   }
+
+  //   return productWithInventoryQty;
+  // }
 }

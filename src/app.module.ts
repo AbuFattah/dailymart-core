@@ -11,6 +11,8 @@ import * as path from 'path';
 import { CatalogModule } from './catalog/catalog.module';
 import { Product } from './catalog/typeorm/entities/Product.entity';
 import { ProductsCategories } from './catalog/typeorm/entities/Products_Categories.entity';
+import { InventoryModule } from './inventory/inventory.module';
+import { Inventory } from './inventory/typeorm/entities/Inventory.entity';
 
 // @Module({
 //   imports: [
@@ -52,12 +54,13 @@ import { ProductsCategories } from './catalog/typeorm/entities/Products_Categori
       username: 'dailymart',
       password: 'dailymart@123',
       synchronize: true,
-      entities: [User, Product, ProductsCategories],
+      entities: [User, Product, ProductsCategories, Inventory],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     UsersModule,
     AuthModule,
     CatalogModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
