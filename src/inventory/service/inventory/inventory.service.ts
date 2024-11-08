@@ -15,6 +15,8 @@ import {
   ActionType,
   StockHistoryService,
 } from '../stock-history/stock-history.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class InventoryService {
@@ -25,11 +27,11 @@ export class InventoryService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Inventory)
     private readonly inventoryRepository: Repository<Inventory>,
+    @InjectQueue('stock-queue') private stockQueue: Queue,
   ) {}
 
   async addInventory(productId: number, quantity: number) {
     try {
-      console.log('in inventory: ' + productId);
       const product = await this.productService.getProductById(productId);
       if (!product) {
         throw new NotFoundException(
@@ -45,14 +47,21 @@ export class InventoryService {
         const lastQuantity = inventory.qty;
         inventory.qty += quantity;
 
-        // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
+        // Use bullmq
 
-        await this.stockHistoryService.createStockHistoryAction(
-          'increase',
+        await this.stockQueue.add('stock-history-action', {
           productId,
           quantity,
+          actionType: 'increase',
           lastQuantity,
-        );
+        });
+
+        // await this.stockHistoryService.createStockHistoryAction(
+        //   'increase',
+        //   productId,
+        //   quantity,
+        //   lastQuantity,
+        // );
         return this.inventoryRepository.save(inventory);
       }
 
@@ -100,13 +109,19 @@ export class InventoryService {
 
       const lastQuantity = inventory.qty;
       inventory.qty -= quantity;
-      // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
-      await this.stockHistoryService.createStockHistoryAction(
-        'decrease',
+      // Use bullmq
+      await this.stockQueue.add('stock-history-action', {
         productId,
         quantity,
+        actionType: 'decrease',
         lastQuantity,
-      );
+      });
+      // await this.stockHistoryService.createStockHistoryAction(
+      //   'decrease',
+      //   productId,
+      //   quantity,
+      //   lastQuantity,
+      // );
       return this.inventoryRepository.save(inventory);
     } catch (error) {
       if (error instanceof NotFoundException || BadRequestException)
@@ -194,14 +209,21 @@ export class InventoryService {
 
     const lastQuantity = inventory.qty;
     inventory.qty = 0;
+    // Use bullmq
 
-    // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
+    await this.stockQueue.add('stock-history-action', {
+      productId,
+      quantity: 0,
+      actionType: 'increase',
+      lastQuantity,
+    });
     await this.stockHistoryService.createStockHistoryAction(
       'clear',
       productId,
       0,
       lastQuantity,
     );
+
     return this.inventoryRepository.save(inventory);
   }
 }

@@ -8,10 +8,22 @@ import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { StockHistory } from './typeorm/entities/StockHistory.entity';
 import { StockHistoryController } from './controller/stock-history/stock-history.controller';
 import { StockHistoryService } from './service/stock-history/stock-history.service';
+import { BullModule } from '@nestjs/bullmq';
+import { StockHistoryProcessor } from './service/stock-history/stock-history.processor';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Inventory, StockHistory, Product])],
+  imports: [
+    TypeOrmModule.forFeature([Inventory, StockHistory, Product]),
+    BullModule.registerQueue({
+      name: 'stock-queue',
+    }),
+  ],
   controllers: [InventoryController, StockHistoryController],
-  providers: [InventoryService, ProductsService, StockHistoryService],
+  providers: [
+    InventoryService,
+    ProductsService,
+    StockHistoryProcessor,
+    StockHistoryService,
+  ],
 })
 export class InventoryModule {}
