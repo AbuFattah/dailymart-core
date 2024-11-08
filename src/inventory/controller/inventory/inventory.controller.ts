@@ -19,11 +19,12 @@ export class InventoryController {
     return await this.inventoryService.getAllInventories();
   }
 
-  @Post(':productId')
+  @Post('add/:productId')
   async addInventory(
     @Param('productId') productId: number,
     @Body('quantity') quantity: number,
   ): Promise<Inventory> {
+    console.log(productId);
     return this.inventoryService.addInventory(productId, quantity);
   }
 
@@ -35,7 +36,7 @@ export class InventoryController {
     return this.inventoryService.updateInventory(productId, newQuantity);
   }
 
-  @Delete(':productId')
+  @Post('remove/:productId')
   async removeInventory(
     @Param('productId') productId: number,
     @Body('quantity') quantity: number,
@@ -50,7 +51,7 @@ export class InventoryController {
     return this.inventoryService.getInventoryByProductId(productId);
   }
 
-  @Patch(':productId/clear')
+  @Patch('clear/:productId')
   async clearInventory(
     @Param('productId') productId: number,
   ): Promise<Inventory> {

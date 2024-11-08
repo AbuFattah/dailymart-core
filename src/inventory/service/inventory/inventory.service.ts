@@ -11,11 +11,16 @@ import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { ProductWithInventoryDto } from 'src/inventory/dtos/ProductWithInventoryDto';
 import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
 import { Repository } from 'typeorm';
+import {
+  ActionType,
+  StockHistoryService,
+} from '../stock-history/stock-history.service';
 
 @Injectable()
 export class InventoryService {
   constructor(
     private readonly productService: ProductsService,
+    private readonly stockHistoryService: StockHistoryService,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Inventory)
@@ -24,6 +29,7 @@ export class InventoryService {
 
   async addInventory(productId: number, quantity: number) {
     try {
+      console.log('in inventory: ' + productId);
       const product = await this.productService.getProductById(productId);
       if (!product) {
         throw new NotFoundException(
@@ -36,7 +42,17 @@ export class InventoryService {
       });
 
       if (inventory) {
+        const lastQuantity = inventory.qty;
         inventory.qty += quantity;
+
+        // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
+
+        await this.stockHistoryService.createStockHistoryAction(
+          'increase',
+          productId,
+          quantity,
+          lastQuantity,
+        );
         return this.inventoryRepository.save(inventory);
       }
 
@@ -82,7 +98,15 @@ export class InventoryService {
         );
       }
 
-      inventory.qty -= quantity; // Decrease quantity
+      const lastQuantity = inventory.qty;
+      inventory.qty -= quantity;
+      // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
+      await this.stockHistoryService.createStockHistoryAction(
+        'decrease',
+        productId,
+        quantity,
+        lastQuantity,
+      );
       return this.inventoryRepository.save(inventory);
     } catch (error) {
       if (error instanceof NotFoundException || BadRequestException)
@@ -168,7 +192,16 @@ export class InventoryService {
       );
     }
 
+    const lastQuantity = inventory.qty;
     inventory.qty = 0;
+
+    // TODO: Use BULLMQ: PUSH EVENT TO BULLMQ
+    await this.stockHistoryService.createStockHistoryAction(
+      'clear',
+      productId,
+      0,
+      lastQuantity,
+    );
     return this.inventoryRepository.save(inventory);
   }
 }

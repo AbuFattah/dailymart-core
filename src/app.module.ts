@@ -16,6 +16,7 @@ import { Inventory } from './inventory/typeorm/entities/Inventory.entity';
 import { OrderModule } from './order/order.module';
 import { Order } from './order/typeorm/entities/Order.entity';
 import { LineItem } from './order/typeorm/entities/LineItem.entity';
+import { StockHistory } from './inventory/typeorm/entities/StockHistory.entity';
 
 // @Module({
 //   imports: [
@@ -57,7 +58,15 @@ import { LineItem } from './order/typeorm/entities/LineItem.entity';
       username: 'dailymart',
       password: 'dailymart@123',
       synchronize: true,
-      entities: [User, Product, ProductsCategories, Inventory, Order, LineItem],
+      entities: [
+        User,
+        Product,
+        ProductsCategories,
+        Inventory,
+        StockHistory,
+        Order,
+        LineItem,
+      ],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
     UsersModule,

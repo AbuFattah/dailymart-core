@@ -1,9 +1,11 @@
 import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
+import { StockHistory } from 'src/inventory/typeorm/entities/StockHistory.entity';
 import {
   Column,
   Double,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -60,6 +62,9 @@ export class Product {
 
   @OneToOne(() => Inventory, (inventory) => inventory.product)
   inventory: Inventory;
+
+  @OneToMany(() => StockHistory, (stockHistory) => stockHistory.product)
+  stockHistory: StockHistory;
 
   @Column()
   created_at: Date;
