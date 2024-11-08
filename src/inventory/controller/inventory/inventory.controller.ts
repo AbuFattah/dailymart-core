@@ -24,7 +24,6 @@ export class InventoryController {
     @Param('productId') productId: number,
     @Body('quantity') quantity: number,
   ): Promise<Inventory> {
-    console.log(productId);
     return this.inventoryService.addInventory(productId, quantity);
   }
 

@@ -214,15 +214,15 @@ export class InventoryService {
     await this.stockQueue.add('stock-history-action', {
       productId,
       quantity: 0,
-      actionType: 'increase',
+      actionType: 'clear',
       lastQuantity,
     });
-    await this.stockHistoryService.createStockHistoryAction(
-      'clear',
-      productId,
-      0,
-      lastQuantity,
-    );
+    // await this.stockHistoryService.createStockHistoryAction(
+    //   'clear',
+    //   productId,
+    //   0,
+    //   lastQuantity,
+    // );
 
     return this.inventoryRepository.save(inventory);
   }
