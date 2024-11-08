@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Order } from 'src/order/typeorm/entities/Order.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -33,4 +34,7 @@ export class User {
 
   @Column({ nullable: true })
   shippingAddress: string;
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }

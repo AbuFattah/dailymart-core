@@ -31,7 +31,7 @@ export class Product {
   @Column({ nullable: true })
   origin: string;
 
-  @Column()
+  @Column({ default: 'active' })
   status: string;
 
   @Column({ nullable: true })
@@ -59,7 +59,6 @@ export class Product {
   color: string;
 
   @OneToOne(() => Inventory, (inventory) => inventory.product)
-  @JoinColumn({ name: 'inventory_id' })
   inventory: Inventory;
 
   @Column()

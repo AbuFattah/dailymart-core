@@ -14,6 +14,11 @@ import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Get()
+  async getAllInventories() {
+    return await this.inventoryService.getAllInventories();
+  }
+
   @Post(':productId')
   async addInventory(
     @Param('productId') productId: number,
@@ -43,11 +48,6 @@ export class InventoryController {
     @Param('productId') productId: number,
   ): Promise<Inventory> {
     return this.inventoryService.getInventoryByProductId(productId);
-  }
-
-  @Get()
-  async getAllInventories(): Promise<Inventory[]> {
-    return this.inventoryService.getAllInventories();
   }
 
   @Patch(':productId/clear')

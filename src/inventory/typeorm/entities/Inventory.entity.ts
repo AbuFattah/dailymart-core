@@ -16,6 +16,6 @@ export class Inventory {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column()
+  @Column({ default: 0 })
   qty: number;
 }

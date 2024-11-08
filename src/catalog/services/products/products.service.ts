@@ -34,9 +34,9 @@ export class ProductsService {
   }
 
   async getProductById(id: number) {
-    const product = await this.productRepository.findOneBy({
-      id,
-      status: 'active',
+    const product = await this.productRepository.findOne({
+      where: { id, status: 'active' },
+      relations: ['inventory'],
     });
 
     if (!product) {
@@ -122,21 +122,4 @@ export class ProductsService {
       );
     }
   }
-
-  // async getProductWithInventoryQty(
-  //   productId: number,
-  // ): Promise<ProductWithInventoryDto> {
-  //   const productWithInventoryQty = await this.productRepository
-  //     .createQueryBuilder('product')
-  //     .leftJoin('product.inventory', 'inventory')
-  //     .where('product.id = :productId', { productId })
-  //     .select(['product.id', 'product.name', 'product.brand', 'inventory.qty'])
-  //     .getOne();
-
-  //   if (!productWithInventoryQty) {
-  //     throw new NotFoundException(`Product not found for ID: ${productId}`);
-  //   }
-
-  //   return productWithInventoryQty;
-  // }
 }

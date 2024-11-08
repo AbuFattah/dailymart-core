@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductsService } from 'src/catalog/services/products/products.service';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
+import { ProductWithInventoryDto } from 'src/inventory/dtos/ProductWithInventoryDto';
 import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
 import { Repository } from 'typeorm';
 
@@ -103,8 +104,34 @@ export class InventoryService {
     return inventory;
   }
 
-  async getAllInventories(): Promise<Inventory[]> {
-    return this.inventoryRepository.find();
+  async getAllInventories(): Promise<ProductWithInventoryDto[]> {
+    const productWithInventoryQty = await this.productRepository
+      .createQueryBuilder('products')
+      .leftJoin('products.inventory', 'inventory')
+      // .where('products.id = :productId', { productId })
+      .andWhere('products.status = :status', { status: 'active' })
+      .select([
+        'products.id',
+        'products.name',
+        'products.brand',
+        'inventory.qty',
+      ])
+      .getMany();
+
+    if (!productWithInventoryQty) {
+      throw new NotFoundException(`Error fetching inventory`);
+    }
+
+    const data: ProductWithInventoryDto[] = productWithInventoryQty.map((x) => {
+      return {
+        product_id: x.id,
+        name: x.name,
+        qty: x?.inventory?.qty || 0,
+        brand: x.brand,
+      };
+    });
+
+    return data;
   }
 
   async updateInventory(
