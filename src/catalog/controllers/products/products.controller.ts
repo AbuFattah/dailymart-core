@@ -7,16 +7,23 @@ import {
   Post,
   Delete,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/utils/jwt-auth.guard';
+import { Roles } from 'src/auth/utils/roles.decorator';
+import { RolesGuard } from 'src/auth/utils/roles.guard';
 
 import { CreateProductDto } from 'src/catalog/dtos/products/CreateProduct.dto';
 import { UpdateProductDto } from 'src/catalog/dtos/products/UpdateProduct.dto';
 import { ProductsService } from 'src/catalog/services/products/products.service';
 
 @Controller('products')
+@Roles('admin')
+@UseGuards(JwtAuthGuard)
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
-
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('')
   async createProduct(@Body() createProductDto: CreateProductDto) {
     return this.productService.createProduct(createProductDto);
@@ -39,6 +46,8 @@ export class ProductsController {
     return this.productService.getProductsBySubcategory(subcategoryId);
   }
 
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':id')
   async updateProduct(
     @Param('id') id: number,

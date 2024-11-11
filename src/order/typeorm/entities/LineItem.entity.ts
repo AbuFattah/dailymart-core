@@ -30,6 +30,9 @@ export class LineItem {
   qty: number;
 
   @Column('decimal')
+  cost: number;
+
+  @Column('decimal')
   price: number;
 
   @Column('decimal')

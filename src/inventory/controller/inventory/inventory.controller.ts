@@ -6,11 +6,17 @@ import {
   Get,
   Delete,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/utils/jwt-auth.guard';
+import { Roles } from 'src/auth/utils/roles.decorator';
+import { RolesGuard } from 'src/auth/utils/roles.guard';
 import { InventoryService } from 'src/inventory/service/inventory/inventory.service';
 import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
 
 @Controller('inventory')
+@Roles('admin')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
@@ -23,7 +29,7 @@ export class InventoryController {
   async addInventory(
     @Param('productId') productId: number,
     @Body('quantity') quantity: number,
-  ): Promise<Inventory> {
+  ) {
     return this.inventoryService.addInventory(productId, quantity);
   }
 

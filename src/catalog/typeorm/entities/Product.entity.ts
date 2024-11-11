@@ -27,6 +27,9 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
+  @Column({ type: 'decimal', nullable: true })
+  cost: number;
+
   @Column({ type: 'decimal' })
   price: number;
 

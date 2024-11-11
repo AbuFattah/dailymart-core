@@ -2,6 +2,7 @@ import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -14,6 +15,7 @@ export class Inventory {
 
   @OneToOne(() => Product, (product) => product.inventory)
   @JoinColumn({ name: 'product_id' })
+  @Index()
   product: Product;
 
   @Column({ default: 0 })

@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/utils/jwt-auth.guard';
+import { Roles } from 'src/auth/utils/roles.decorator';
+import { RolesGuard } from 'src/auth/utils/roles.guard';
 import { UpdatePassDto } from 'src/users/dtos/UpdatePass.dto';
 import { UpdateUserDto } from 'src/users/dtos/UpdateUser.dto';
 
@@ -21,13 +23,13 @@ import { comparePassword } from 'src/utils/bcrypt';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('profile')
   async getProfile(@Req() req: Request) {
     return req.user;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('profile')
   async updateProfile(
     @Req() req: Request,

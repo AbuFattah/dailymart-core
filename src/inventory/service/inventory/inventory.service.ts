@@ -32,45 +32,66 @@ export class InventoryService {
 
   async addInventory(productId: number, quantity: number) {
     try {
-      const product = await this.productService.getProductById(productId);
-      if (!product) {
+      // return { success: true };
+
+      // const product = await this.productService.getProductById(productId);
+
+      // const inventory = await this.inventoryRepository.findOne({
+      //   where: { product: { id: productId } },
+      //   relations: ['product'],
+      // });
+
+      // if (!inventory.product) {
+      //   throw new NotFoundException(
+      //     `Product with ID ${productId} does not exist.`,
+      //   );
+      // }
+
+      const inventory = await this.inventoryRepository
+        .createQueryBuilder('inventory')
+        .leftJoinAndSelect('inventory.product', 'product')
+        .where('inventory.product_id = :productId', { productId })
+        .addSelect('product.name') // only load the product's name
+        .getOne();
+
+      if (!inventory || !inventory.product) {
         throw new NotFoundException(
           `Product with ID ${productId} does not exist.`,
         );
       }
 
-      const inventory = await this.inventoryRepository.findOne({
-        where: { product: { id: productId } },
-      });
+      // inventory ? this.inventoryRepository.save({...inventory,qty: inventory.qty + quantity}) : this.inventoryRepository.save({})
 
       if (inventory) {
-        const lastQuantity = inventory.qty;
-        inventory.qty += quantity;
-
-        // Use bullmq
-
-        await this.stockQueue.add('stock-history-action', {
-          productId,
-          quantity,
-          actionType: 'increase',
-          lastQuantity,
+        await this.inventoryRepository.save({
+          ...inventory,
+          qty: inventory.qty + quantity,
+        });
+      } else {
+        const newInventory = this.inventoryRepository.create({
+          product: { id: productId },
+          qty: quantity,
         });
 
-        // await this.stockHistoryService.createStockHistoryAction(
-        //   'increase',
-        //   productId,
-        //   quantity,
-        //   lastQuantity,
-        // );
-        return this.inventoryRepository.save(inventory);
+        await this.inventoryRepository.save(newInventory);
       }
 
-      const newInventory = this.inventoryRepository.create({
-        product: { id: productId },
-        qty: quantity,
+      const lastQuantity = inventory.qty || 0;
+
+      // Use bullmq
+      this.stockQueue.add('stock-history-action', {
+        productId,
+        quantity,
+        actionType: 'increase',
+        lastQuantity,
       });
 
-      return this.inventoryRepository.save(newInventory);
+      return {
+        id: inventory.id,
+        qty: inventory.qty,
+        productId: productId,
+        productName: inventory.product.name,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -81,17 +102,84 @@ export class InventoryService {
     }
   }
 
+  // async addInventory(productId: number, quantity: number): Promise<Inventory> {
+  //   if (!productId || !quantity || quantity <= 0) {
+  //     throw new BadRequestException('Invalid input parameters');
+  //   }
+
+  //   try {
+  //     // Run product validation and inventory check in parallel
+  //     const [inventory, product] = await Promise.all([
+  //       this.inventoryRepository.findOne({
+  //         where: { product: { id: productId } },
+  //       }),
+  //       this.productRepository.findOne({
+  //         where: { id: productId },
+  //       }),
+  //     ]);
+
+  //     if (!product) {
+  //       throw new NotFoundException(
+  //         `Product with ID ${productId} does not exist.`,
+  //       );
+  //     }
+
+  //     const lastQuantity = inventory?.qty ?? 0;
+
+  //     const [updatedInventory] = await Promise.all([
+  //       inventory
+  //         ? this.inventoryRepository.save({
+  //             ...inventory,
+  //             qty: inventory.qty + quantity,
+  //           })
+  //         : this.inventoryRepository.save({
+  //             product: { id: productId },
+  //             qty: quantity,
+  //           }),
+
+  //       this.stockQueue
+  //         .add(
+  //           'stock-history-action',
+  //           {
+  //             productId,
+  //             quantity,
+  //             actionType: 'increase',
+  //             lastQuantity,
+  //           },
+  //           {
+  //             removeOnComplete: true,
+  //             attempts: 3,
+  //           },
+  //         )
+  //         .catch((err) => {
+  //           console.error('Failed to queue stock history:', err);
+  //           return null;
+  //         }),
+  //     ]);
+
+  //     return updatedInventory;
+  //   } catch (error) {
+  //     console.error('Error adding inventory:', error);
+
+  //     if (error instanceof NotFoundException) {
+  //       throw error;
+  //     }
+
+  //     throw new InternalServerErrorException('Failed to update inventory');
+  //   }
+  // }
+
   async removeInventory(
     productId: number,
     quantity: number,
   ): Promise<Inventory> {
     try {
-      const product = await this.productService.getProductById(productId);
-      if (!product) {
-        throw new NotFoundException(
-          `Product with ID ${productId} does not exist.`,
-        );
-      }
+      // const product = await this.productService.getProductById(productId);
+      // if (!product) {
+      //   throw new NotFoundException(
+      //     `Product with ID ${productId} does not exist.`,
+      //   );
+      // }
       const inventory = await this.inventoryRepository.findOne({
         where: { product: { id: productId } },
       });
@@ -110,7 +198,7 @@ export class InventoryService {
       const lastQuantity = inventory.qty;
       inventory.qty -= quantity;
       // Use bullmq
-      await this.stockQueue.add('stock-history-action', {
+      this.stockQueue.add('stock-history-action', {
         productId,
         quantity,
         actionType: 'decrease',

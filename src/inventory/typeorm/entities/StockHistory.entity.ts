@@ -18,7 +18,11 @@ export class StockHistory {
   @JoinColumn({ name: 'productId' })
   product: Product;
 
-  @Column({ type: 'enum', enum: ['increase', 'decrease', 'clear'] })
+  @Column({
+    type: 'enum',
+    enum: ['increase', 'decrease', 'clear'],
+    // enumName: 'stock_history_actiontype_enum',
+  })
   actionType: string;
 
   @Column('int')

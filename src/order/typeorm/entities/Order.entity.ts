@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -15,13 +16,10 @@ export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.orders)
+  @ManyToOne(() => User, (user) => user.orders, { nullable: true })
   user: User;
 
-  @Column({
-    type: 'enum',
-    enum: ['placed', 'shipped', 'delivered', 'cancelled', 'returned'],
-  })
+  @Column()
   status: string;
 
   @Column('decimal')
@@ -35,6 +33,18 @@ export class Order {
 
   @Column('decimal')
   grandtotal: number;
+
+  @Column('')
+  username: string;
+
+  @Column('')
+  phone: string;
+
+  @Column('')
+  address: string;
+
+  @Column('')
+  area: string;
 
   @OneToMany(() => LineItem, (lineItem) => lineItem.order)
   lineItems: LineItem[];
