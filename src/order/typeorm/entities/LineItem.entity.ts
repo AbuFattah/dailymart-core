@@ -26,6 +26,12 @@ export class LineItem {
   @JoinColumn({ name: 'productId' })
   product: Product;
 
+  @Column()
+  name: string;
+
+  @Column()
+  size: string;
+
   @Column('int')
   qty: number;
 

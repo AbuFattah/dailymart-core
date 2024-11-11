@@ -13,21 +13,21 @@ import { LineItemDto } from './LineItem.dto';
 // import { LineItemDto } from './line-item.dto';
 
 export class CreateOrderDto {
-  @IsNumber()
-  @IsNotEmpty()
-  subtotal: number;
+  // @IsNumber()
+  // @IsNotEmpty()
+  // subtotal: number;
 
   @IsNumber()
   @IsOptional()
   discount: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   tax: number;
 
-  @IsNumber()
-  @IsNotEmpty()
-  grandtotal: number;
+  // @IsNumber()
+  // @IsNotEmpty()
+  // grandtotal: number;
 
   @IsString()
   @IsNotEmpty()

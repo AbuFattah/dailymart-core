@@ -15,8 +15,7 @@ import { InventoryService } from 'src/inventory/service/inventory/inventory.serv
 import { Inventory } from 'src/inventory/typeorm/entities/Inventory.entity';
 
 @Controller('inventory')
-@Roles('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
@@ -24,7 +23,8 @@ export class InventoryController {
   async getAllInventories() {
     return await this.inventoryService.getAllInventories();
   }
-
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('add/:productId')
   async addInventory(
     @Param('productId') productId: number,
@@ -32,7 +32,8 @@ export class InventoryController {
   ) {
     return this.inventoryService.addInventory(productId, quantity);
   }
-
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':productId')
   async updateInventory(
     @Param('productId') productId: number,

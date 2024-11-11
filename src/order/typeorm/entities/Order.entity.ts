@@ -13,22 +13,22 @@ import { LineItem } from './LineItem.entity';
 
 @Entity({ name: 'orders' })
 export class Order {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => User, (user) => user.orders, { nullable: true })
   user: User;
 
-  @Column()
+  @Column({ default: 'placed' })
   status: string;
 
   @Column('decimal')
   subtotal: number;
 
-  @Column('decimal')
+  @Column('decimal', { default: 0 })
   discount: number;
 
-  @Column('decimal')
+  @Column('decimal', { default: 0 })
   tax: number;
 
   @Column('decimal')
