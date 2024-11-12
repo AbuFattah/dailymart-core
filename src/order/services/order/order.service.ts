@@ -5,6 +5,8 @@ import { CreateOrderDto } from 'src/order/dtos/CreateOrder.dto';
 import { UpdateLineItemCostDto } from 'src/order/dtos/UpdateLIneItemCosts.dto';
 import { LineItem } from 'src/order/typeorm/entities/LineItem.entity';
 import { Order } from 'src/order/typeorm/entities/Order.entity';
+import { Return } from 'src/order/typeorm/entities/Return.entity';
+import { CreateReturnDto } from 'src/users/dtos/CreateReturn.dto';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class OrderService {
     @InjectRepository(Order) private orderRepository: Repository<Order>,
     @InjectRepository(LineItem)
     private lineItemRepository: Repository<LineItem>,
+    @InjectRepository(Return) private returnRepository: Repository<Return>,
     private productService: ProductsService,
   ) {}
 
@@ -61,6 +64,7 @@ export class OrderService {
     const tax: number = +createOrderDto.tax || 0;
 
     const grandtotal: number = subtotal - discount + tax;
+    const adjustedTotalAmount = grandtotal;
 
     // console.log(lineItemsData);
 
@@ -70,6 +74,7 @@ export class OrderService {
       status: 'placed',
       subtotal,
       grandtotal,
+      adjustedTotalAmount,
       lineItems: lineItemsData,
     });
 
@@ -135,4 +140,63 @@ export class OrderService {
   }
 
   async updateOrderStatus(orderId: string) {}
+
+  async createReturn(createReturnDto: CreateReturnDto): Promise<Return[]> {
+    const { orderId, lineItems } = createReturnDto;
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['lineItems'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const returns = await Promise.all(
+      lineItems.map(async ({ lineItemId, returnQty, returnReason }) => {
+        const lineItem = await this.lineItemRepository.findOne({
+          where: { id: lineItemId },
+        });
+
+        if (!lineItem) {
+          throw new NotFoundException(
+            `Line item with ID ${lineItemId} not found`,
+          );
+        }
+
+        const refundAmount = returnQty * lineItem.price;
+
+        lineItem.returnQty += returnQty;
+        lineItem.refundAmount += refundAmount;
+        lineItem.returnStatus =
+          lineItem.returnQty === lineItem.qty
+            ? 'Returned'
+            : 'Partially Returned';
+
+        await this.lineItemRepository.save(lineItem);
+
+        return this.returnRepository.save({
+          order,
+          lineItem,
+          returnQty,
+          returnReason,
+          refundAmount,
+          returnStatus: lineItem.returnStatus,
+        });
+      }),
+    );
+
+    order.totalReturnedQty += returns.reduce((sum, r) => sum + r.returnQty, 0);
+    order.returnStatus =
+      order.totalReturnedQty ===
+      order.lineItems.reduce((sum, li) => sum + li.qty, 0)
+        ? 'Fully Returned'
+        : 'Partially Returned';
+    order.adjustedTotalAmount =
+      order.grandtotal - returns.reduce((sum, r) => sum + r.refundAmount, 0);
+
+    await this.orderRepository.save(order);
+
+    return returns;
+  }
 }

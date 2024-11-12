@@ -23,6 +23,7 @@ import { UpdateLineItemCostDto } from 'src/order/dtos/UpdateLIneItemCosts.dto';
 import { OrderService } from 'src/order/services/order/order.service';
 import { LineItem } from 'src/order/typeorm/entities/LineItem.entity';
 import { Order } from 'src/order/typeorm/entities/Order.entity';
+import { CreateReturnDto } from 'src/users/dtos/CreateReturn.dto';
 
 @Controller('orders')
 export class OrderController {
@@ -69,5 +70,12 @@ export class OrderController {
     @Body() updateLineItemCostDto: UpdateLineItemCostDto,
   ): Promise<LineItem[]> {
     return await this.orderService.updateLineItemCosts(updateLineItemCostDto);
+  }
+
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post('return')
+  async createReturn(@Body() createReturnDto: CreateReturnDto) {
+    return this.orderService.createReturn(createReturnDto);
   }
 }
