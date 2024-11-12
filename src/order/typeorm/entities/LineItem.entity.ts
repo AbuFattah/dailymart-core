@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Order } from './Order.entity';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'line_item' })
 export class LineItem {
@@ -33,22 +34,26 @@ export class LineItem {
   qty: number;
 
   @Column('decimal')
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   cost: number;
 
   @Column('decimal')
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   price: number;
 
   @Column('decimal')
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   lineAmt: number;
 
   @Column('int', { default: 0 })
-  returnQty: number; // Quantity of this line item being returned
+  returnQty: number;
 
   @Column({ default: 'Not Returned' })
   returnStatus: string; // 'Not Returned', 'Partially Returned', 'Returned'
 
   @Column('decimal', { default: 0 })
-  refundAmount: number; // Amount refunded for this line item
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
+  refundAmount: number;
 
   @CreateDateColumn()
   createdAt: Date;

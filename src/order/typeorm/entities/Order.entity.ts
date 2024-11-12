@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { LineItem } from './LineItem.entity';
 import { Return } from './Return.entity';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'orders' })
 export class Order {
@@ -24,15 +25,19 @@ export class Order {
   status: string;
 
   @Column('decimal')
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   subtotal: number;
 
   @Column('decimal', { default: 0 })
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   discount: number;
 
   @Column('decimal', { default: 0 })
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   tax: number;
 
   @Column('decimal')
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   grandtotal: number;
 
   @Column('')
@@ -54,13 +59,14 @@ export class Order {
   returns: Return[];
 
   @Column('int', { default: 0 })
-  totalReturnedQty: number; // Total quantity of returned items
+  totalReturnedQty: number;
 
   @Column({ default: 'Not Returned' })
   returnStatus: string; // 'Not Returned', 'Partially Returned', 'Fully Returned'
 
   @Column('decimal', { default: 0 })
-  adjustedTotalAmount: number; // Total amount after refunds
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
+  adjustedTotalAmount: number;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -96,7 +96,7 @@ export class OrderService {
   }
 
   async getOrderById(orderId: string) {
-    return this.orderRepository.find({
+    return this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['lineItems'],
     });
@@ -141,41 +141,61 @@ export class OrderService {
 
   async updateOrderStatus(orderId: string) {}
 
-  async createReturn(createReturnDto: CreateReturnDto): Promise<Return[]> {
-    const { orderId, lineItems } = createReturnDto;
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: ['lineItems'],
-    });
+  async createReturn(createReturnDto: CreateReturnDto) {
+    const queryRunner =
+      this.lineItemRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
 
-    if (!order) {
-      throw new NotFoundException('Order not found');
+    try {
+      const order = await this.getOrderById(createReturnDto.orderId);
+
+      const returns = await this.processReturns(
+        createReturnDto.lineItems,
+        order,
+        queryRunner,
+      );
+
+      await this.updateOrderForReturn(order, returns);
+
+      await queryRunner.commitTransaction();
+
+      return { success: true };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
+  }
 
-    const returns = await Promise.all(
+  private async getLineItem(lineItemId: number): Promise<LineItem> {
+    const lineItem = await this.lineItemRepository.findOne({
+      where: { id: lineItemId },
+    });
+    if (!lineItem) {
+      throw new NotFoundException(`Line item with ID ${lineItemId} not found`);
+    }
+    return lineItem;
+  }
+
+  private async processReturns(
+    lineItems,
+    order,
+    queryRunner,
+  ): Promise<Return[]> {
+    return Promise.all(
       lineItems.map(async ({ lineItemId, returnQty, returnReason }) => {
-        const lineItem = await this.lineItemRepository.findOne({
-          where: { id: lineItemId },
-        });
+        const lineItem = await this.getLineItem(lineItemId);
+        const refundAmount = +returnQty * +lineItem.price;
 
-        if (!lineItem) {
-          throw new NotFoundException(
-            `Line item with ID ${lineItemId} not found`,
-          );
-        }
+        await this.updateLineItemForReturn(
+          lineItem,
+          returnQty,
+          refundAmount,
+          queryRunner,
+        );
 
-        const refundAmount = returnQty * lineItem.price;
-
-        lineItem.returnQty += returnQty;
-        lineItem.refundAmount += refundAmount;
-        lineItem.returnStatus =
-          lineItem.returnQty === lineItem.qty
-            ? 'Returned'
-            : 'Partially Returned';
-
-        await this.lineItemRepository.save(lineItem);
-
-        return this.returnRepository.save({
+        const returnEntity = this.returnRepository.create({
           order,
           lineItem,
           returnQty,
@@ -183,20 +203,36 @@ export class OrderService {
           refundAmount,
           returnStatus: lineItem.returnStatus,
         });
+
+        return await queryRunner.manager.save(returnEntity);
       }),
     );
+  }
 
-    order.totalReturnedQty += returns.reduce((sum, r) => sum + r.returnQty, 0);
+  private async updateLineItemForReturn(
+    lineItem: LineItem,
+    returnQty: number,
+    refundAmount: number,
+    queryRunner,
+  ) {
+    lineItem.returnQty = +lineItem.returnQty + +returnQty;
+    lineItem.refundAmount = +lineItem.refundAmount + +refundAmount;
+    lineItem.returnStatus =
+      lineItem.returnQty === +lineItem.qty ? 'Returned' : 'Partially Returned';
+
+    await queryRunner.manager.save(lineItem);
+  }
+
+  private async updateOrderForReturn(order: Order, returns: Return[]) {
+    order.totalReturnedQty += returns.reduce((sum, r) => sum + +r.returnQty, 0);
     order.returnStatus =
       order.totalReturnedQty ===
-      order.lineItems.reduce((sum, li) => sum + li.qty, 0)
+      order.lineItems.reduce((sum, li) => sum + +li.qty, 0)
         ? 'Fully Returned'
         : 'Partially Returned';
     order.adjustedTotalAmount =
-      order.grandtotal - returns.reduce((sum, r) => sum + r.refundAmount, 0);
+      +order.grandtotal - returns.reduce((sum, r) => sum + +r.refundAmount, 0);
 
-    await this.orderRepository.save(order);
-
-    return returns;
+    await this.lineItemRepository.manager.save(order);
   }
 }
