@@ -1,4 +1,3 @@
-import { User } from 'src/typeorm/entities/User.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,14 +5,12 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Order } from './Order.entity';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 
 @Entity({ name: 'line_item' })
-@Unique(['order', 'product'])
 export class LineItem {
   @PrimaryGeneratedColumn()
   id: number;
@@ -43,6 +40,15 @@ export class LineItem {
 
   @Column('decimal')
   lineAmt: number;
+
+  @Column('int', { default: 0 })
+  returnQty: number; // Quantity of this line item being returned
+
+  @Column({ default: 'Not Returned' })
+  returnStatus: string; // 'Not Returned', 'Partially Returned', 'Returned'
+
+  @Column('decimal', { default: 0 })
+  refundAmount: number; // Amount refunded for this line item
 
   @CreateDateColumn()
   createdAt: Date;

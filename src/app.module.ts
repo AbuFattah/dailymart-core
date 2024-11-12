@@ -18,6 +18,7 @@ import { OrderModule } from './order/order.module';
 import { Order } from './order/typeorm/entities/Order.entity';
 import { LineItem } from './order/typeorm/entities/LineItem.entity';
 import { StockHistory } from './inventory/typeorm/entities/StockHistory.entity';
+import { Return } from './order/typeorm/entities/Return.entity';
 
 // @Module({
 //   imports: [
@@ -73,6 +74,7 @@ import { StockHistory } from './inventory/typeorm/entities/StockHistory.entity';
         StockHistory,
         Order,
         LineItem,
+        Return,
       ],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),

@@ -16,8 +16,4 @@ export class LineItemDto {
   @IsNumber()
   @IsPositive()
   price: number;
-
-  // @IsNumber()
-  // @IsPositive()
-  // lineAmt: number;
 }

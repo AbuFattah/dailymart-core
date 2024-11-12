@@ -6,9 +6,10 @@ import { Order } from './typeorm/entities/Order.entity';
 import { LineItem } from './typeorm/entities/LineItem.entity';
 import { ProductsService } from 'src/catalog/services/products/products.service';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
+import { Return } from './typeorm/entities/Return.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, LineItem, Product])],
+  imports: [TypeOrmModule.forFeature([Order, LineItem, Product, Return])],
   providers: [OrderService, ProductsService],
   controllers: [OrderController],
 })
