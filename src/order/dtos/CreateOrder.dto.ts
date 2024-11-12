@@ -25,9 +25,9 @@ export class CreateOrderDto {
   @IsOptional()
   tax: number;
 
-  // @IsNumber()
-  // @IsNotEmpty()
-  // grandtotal: number;
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: string;
 
   @IsString()
   @IsNotEmpty()

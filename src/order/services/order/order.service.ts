@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductsService } from 'src/catalog/services/products/products.service';
 import { CreateOrderDto } from 'src/order/dtos/CreateOrder.dto';
@@ -19,7 +23,6 @@ export class OrderService {
     private productService: ProductsService,
   ) {}
 
-  // Order creation service method
   async createOrder(
     createOrderDto: CreateOrderDto,
     userId: number,
@@ -30,7 +33,6 @@ export class OrderService {
           lineItem.productId,
         );
 
-        // Set cost from Product table or default to null
         const cost = +product.cost || 0;
         const lineAmt = +lineItem.price * +lineItem.qty;
 
@@ -49,12 +51,6 @@ export class OrderService {
       }),
     );
 
-    // await Promise.all(
-    //   lineItemsData.map(async (lineItem) => {
-    //     await this.lineItemRepository.save(lineItem);
-    //   }),
-    // );
-
     const subtotal: number = lineItemsData.reduce(
       (sum, item) => sum + item.lineAmt,
       0,
@@ -71,6 +67,7 @@ export class OrderService {
     const order = this.orderRepository.create({
       user: { id: userId },
       ...createOrderDto,
+      paymentMethod: createOrderDto.paymentMethod,
       status: 'placed',
       subtotal,
       grandtotal,
@@ -139,7 +136,28 @@ export class OrderService {
     );
   }
 
-  async updateOrderStatus(orderId: string) {}
+  async updateOrderStatus(orderId: string, newStatus: string): Promise<Order> {
+    const order = await this.getOrderById(orderId);
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    const hasZeroCostLineItem = order.lineItems.some(
+      (lineItem) => lineItem.cost === 0,
+    );
+
+    if (hasZeroCostLineItem) {
+      throw new BadRequestException(
+        'Cannot update order status as one or more line items have a cost of zero.',
+      );
+    }
+
+    order.status = newStatus;
+    await this.orderRepository.save(order);
+
+    return order;
+  }
 
   async createReturn(createReturnDto: CreateReturnDto) {
     const queryRunner =

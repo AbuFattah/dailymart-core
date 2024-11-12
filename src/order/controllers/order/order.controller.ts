@@ -20,6 +20,7 @@ import { RolesGuard } from 'src/auth/utils/roles.guard';
 // import { RolesGuard } from 'src/auth/utils/roles.guard';
 import { CreateOrderDto } from 'src/order/dtos/CreateOrder.dto';
 import { UpdateLineItemCostDto } from 'src/order/dtos/UpdateLIneItemCosts.dto';
+import { UpdateOrderStatusDto } from 'src/order/dtos/UpdateOrderStatus.dto';
 import { OrderService } from 'src/order/services/order/order.service';
 import { LineItem } from 'src/order/typeorm/entities/LineItem.entity';
 import { Order } from 'src/order/typeorm/entities/Order.entity';
@@ -77,5 +78,15 @@ export class OrderController {
   @Post('return')
   async createReturn(@Body() createReturnDto: CreateReturnDto) {
     return this.orderService.createReturn(createReturnDto);
+  }
+
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Patch('status')
+  async updateOrderStatus(@Body() updateOrderStatus: UpdateOrderStatusDto) {
+    return this.orderService.updateOrderStatus(
+      updateOrderStatus.orderId,
+      updateOrderStatus.status,
+    );
   }
 }

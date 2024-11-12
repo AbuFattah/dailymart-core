@@ -24,6 +24,9 @@ export class Order {
   @Column({ default: 'placed' })
   status: string;
 
+  @Column({ nullable: true, default: 'Cash On Delivery' })
+  paymentMethod: string;
+
   @Column('decimal')
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   subtotal: number;
