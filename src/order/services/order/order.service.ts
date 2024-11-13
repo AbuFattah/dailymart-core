@@ -144,7 +144,7 @@ export class OrderService {
     }
 
     const hasZeroCostLineItem = order.lineItems.some(
-      (lineItem) => lineItem.cost === 0,
+      (lineItem) => +lineItem.cost === 0,
     );
 
     if (hasZeroCostLineItem) {

@@ -24,8 +24,14 @@ export class Order {
   @Column({ default: 'placed' })
   status: string;
 
-  @Column({ nullable: true, default: 'Cash On Delivery' })
+  @Column({ default: 'Cash On Delivery' })
   paymentMethod: string;
+
+  @Column({ default: 'awaiting' })
+  paymentStatus: string;
+
+  @Column({ nullable: true })
+  shippingCharge: number;
 
   @Column('decimal')
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
