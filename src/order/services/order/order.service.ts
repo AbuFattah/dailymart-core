@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProductsService } from 'src/catalog/services/products/products.service';
+import { CreateLineItemDto } from 'src/order/dtos/CreateLineItem.dto';
 import { CreateOrderDto } from 'src/order/dtos/CreateOrder.dto';
 import { UpdateLineItemCostDto } from 'src/order/dtos/UpdateLIneItemCosts.dto';
 import { LineItem } from 'src/order/typeorm/entities/LineItem.entity';
@@ -23,54 +24,84 @@ export class OrderService {
     private productService: ProductsService,
   ) {}
 
+  // async createOrder(
+  //   createOrderDto: CreateOrderDto,
+  //   userId: number,
+  // ): Promise<Order> {
+  //   const lineItemsData = await Promise.all(
+  //     createOrderDto.lineItems.map(async (lineItem) => {
+  //       const product = await this.productService.getProductById(
+  //         lineItem.productId,
+  //       );
+
+  //       const cost = +product.cost || 0;
+  //       const lineAmt = +lineItem.price * +lineItem.qty;
+
+  //       const lineitem = this.lineItemRepository.create({
+  //         product,
+  //         name: product.name,
+  //         size: product.size,
+  //         qty: +lineItem.qty,
+  //         price: +lineItem.price,
+  //         lineAmt,
+  //         cost,
+  //       });
+  //       await this.lineItemRepository.save(lineitem);
+
+  //       return lineitem;
+  //     }),
+  //   );
+
+  //   const subtotal: number = lineItemsData.reduce(
+  //     (sum, item) => sum + item.lineAmt,
+  //     0,
+  //   );
+
+  //   const discount: number = +createOrderDto.discount || 0;
+  //   const tax: number = +createOrderDto.tax || 0;
+
+  //   const grandtotal: number = subtotal - discount + tax;
+  //   const adjustedTotalAmount = grandtotal;
+
+  //   // console.log(lineItemsData);
+
+  //   const order = this.orderRepository.create({
+  //     user: { id: userId },
+  //     ...createOrderDto,
+  //     paymentMethod: createOrderDto.paymentMethod,
+  //     status: 'placed',
+  //     subtotal,
+  //     grandtotal,
+  //     adjustedTotalAmount,
+  //     lineItems: lineItemsData,
+  //   });
+
+  //   return this.orderRepository.save(order);
+  // }
+
   async createOrder(
     createOrderDto: CreateOrderDto,
     userId: number,
   ): Promise<Order> {
-    const lineItemsData = await Promise.all(
-      createOrderDto.lineItems.map(async (lineItem) => {
-        const product = await this.productService.getProductById(
-          lineItem.productId,
-        );
+    const lineItemsData = await this.createLineItems(createOrderDto.lineItems);
 
-        const cost = +product.cost || 0;
-        const lineAmt = +lineItem.price * +lineItem.qty;
-
-        const lineitem = this.lineItemRepository.create({
-          product,
-          name: product.name,
-          size: product.size,
-          qty: +lineItem.qty,
-          price: +lineItem.price,
-          lineAmt,
-          cost,
-        });
-        await this.lineItemRepository.save(lineitem);
-
-        return lineitem;
-      }),
+    // Helper method to calculate summary
+    const { subtotal, discount, grandTotal } = this.calculateOrderSummary(
+      lineItemsData,
+      createOrderDto.discount,
+      createOrderDto.tax,
     );
 
-    const subtotal: number = lineItemsData.reduce(
-      (sum, item) => sum + item.lineAmt,
-      0,
-    );
-
-    const discount: number = +createOrderDto.discount || 0;
-    const tax: number = +createOrderDto.tax || 0;
-
-    const grandtotal: number = subtotal - discount + tax;
-    const adjustedTotalAmount = grandtotal;
-
-    // console.log(lineItemsData);
+    const adjustedTotalAmount = grandTotal;
 
     const order = this.orderRepository.create({
       user: { id: userId },
       ...createOrderDto,
       paymentMethod: createOrderDto.paymentMethod,
       status: 'placed',
+      discount,
       subtotal,
-      grandtotal,
+      grandtotal: grandTotal,
       adjustedTotalAmount,
       lineItems: lineItemsData,
     });
@@ -184,6 +215,50 @@ export class OrderService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async createLineItems(
+    lineItemsDto: CreateLineItemDto[],
+  ): Promise<LineItem[]> {
+    const lineItemsData = await Promise.all(
+      lineItemsDto.map(async (lineItem) => {
+        const product = await this.productService.getProductById(
+          lineItem.productId,
+        );
+        const cost = +product.cost || 0;
+        const lineAmt = +lineItem.price * +lineItem.qty;
+
+        const lineItemEntity = this.lineItemRepository.create({
+          product,
+          name: product.name,
+          size: product.size,
+          qty: +lineItem.qty,
+          price: +lineItem.price,
+          lineAmt,
+          cost,
+        });
+
+        await this.lineItemRepository.save(lineItemEntity);
+        return lineItemEntity;
+      }),
+    );
+
+    return lineItemsData;
+  }
+
+  calculateOrderSummary(
+    lineItems: LineItem[],
+    discount: number = 0,
+    tax: number = 0,
+  ): { subtotal: number; discount: number; grandTotal: number } {
+    const subtotal = lineItems.reduce((sum, item) => sum + item.lineAmt, 0);
+    const grandTotal = subtotal - discount + tax;
+
+    return {
+      subtotal,
+      discount,
+      grandTotal,
+    };
   }
 
   private async getLineItem(lineItemId: number): Promise<LineItem> {

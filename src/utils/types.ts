@@ -17,7 +17,7 @@ export type UpdatePassParams = {
 };
 
 export enum PaymentMethods {
-  COD = 'Cash On Delivery',
+  COD = 'COD',
   Bkash = 'bKash',
 }
 

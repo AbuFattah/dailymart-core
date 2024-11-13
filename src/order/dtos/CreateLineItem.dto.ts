@@ -1,6 +1,6 @@
 import { IsNumber, IsNotEmpty, IsPositive } from 'class-validator';
 
-export class LineItemDto {
+export class CreateLineItemDto {
   @IsNumber()
   @IsNotEmpty()
   productId: number;

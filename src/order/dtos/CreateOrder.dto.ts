@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { LineItemDto } from './LineItem.dto';
+import { CreateLineItemDto } from './CreateLineItem.dto';
 // import { LineItemDto } from './line-item.dto';
 
 export class CreateOrderDto {
@@ -52,5 +52,5 @@ export class CreateOrderDto {
   @IsNotEmpty()
   @IsArray()
   @ArrayNotEmpty()
-  lineItems: LineItemDto[];
+  lineItems: CreateLineItemDto[];
 }
