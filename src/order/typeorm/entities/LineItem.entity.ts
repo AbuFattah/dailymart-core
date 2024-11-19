@@ -33,15 +33,15 @@ export class LineItem {
   @Column('int')
   qty: number;
 
-  @Column('decimal')
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   cost: number;
 
-  @Column('decimal')
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   price: number;
 
-  @Column('decimal')
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   lineAmt: number;
 
@@ -51,7 +51,7 @@ export class LineItem {
   @Column({ default: 'Not Returned' })
   returnStatus: string; // 'Not Returned', 'Partially Returned', 'Returned'
 
-  @Column('decimal', { default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   refundAmount: number;
 

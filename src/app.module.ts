@@ -19,6 +19,9 @@ import { Order } from './order/typeorm/entities/Order.entity';
 import { LineItem } from './order/typeorm/entities/LineItem.entity';
 import { StockHistory } from './inventory/typeorm/entities/StockHistory.entity';
 import { Return } from './order/typeorm/entities/Return.entity';
+import { CartModule } from './cart/cart.module';
+import { Cart } from './cart/typeorm/entities/Cart.entity';
+import { CartItem } from './cart/typeorm/entities/CartItem.entity';
 
 // @Module({
 //   imports: [
@@ -75,6 +78,8 @@ import { Return } from './order/typeorm/entities/Return.entity';
         Order,
         LineItem,
         Return,
+        Cart,
+        CartItem,
       ],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
@@ -83,6 +88,7 @@ import { Return } from './order/typeorm/entities/Return.entity';
     CatalogModule,
     InventoryModule,
     OrderModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
