@@ -41,9 +41,9 @@ export class CreateOrderDto {
   @IsNotEmpty()
   address: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  area: string;
+  areaId: number;
 
   @IsEnum(['placed', 'shipped', 'delivered', 'cancelled', 'returned'])
   @IsOptional()

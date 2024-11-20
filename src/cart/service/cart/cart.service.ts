@@ -76,7 +76,7 @@ export class CartService {
   async updateCartTotals(cart: Cart): Promise<Cart> {
     const cartItems = await this.cartItemRepository.find({ where: { cart } });
     const subtotal = cartItems.reduce((sum, item) => sum + item.lineAmt, 0);
-    const discount = 0; // Implement discount logic if needed
+    const discount = 0;
     const grandTotal = subtotal - discount;
 
     cart.subtotal = subtotal;

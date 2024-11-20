@@ -21,7 +21,7 @@ export class CartController {
     @Query('tempCartId') tempCartId: string,
     @Req() req,
   ) {
-    const userId = req.user?.id; // Extract user ID if logged in
+    const userId = req.user?.id;
     return this.cartService.addToCart(tempCartId, addToCartDto, userId);
   }
 

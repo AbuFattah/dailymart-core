@@ -22,6 +22,7 @@ import { Return } from './order/typeorm/entities/Return.entity';
 import { CartModule } from './cart/cart.module';
 import { Cart } from './cart/typeorm/entities/Cart.entity';
 import { CartItem } from './cart/typeorm/entities/CartItem.entity';
+import { ShippingCharge } from './order/typeorm/entities/ShippingCharge.entity';
 
 // @Module({
 //   imports: [
@@ -80,6 +81,7 @@ import { CartItem } from './cart/typeorm/entities/CartItem.entity';
         Return,
         Cart,
         CartItem,
+        ShippingCharge,
       ],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),

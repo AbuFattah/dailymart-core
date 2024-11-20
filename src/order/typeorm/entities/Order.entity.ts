@@ -58,8 +58,8 @@ export class Order {
   @Column('')
   address: string;
 
-  @Column('')
-  area: string;
+  @Column({ nullable: true })
+  areaId: number;
 
   @OneToMany(() => LineItem, (lineItem) => lineItem.order)
   lineItems: LineItem[];

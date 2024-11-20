@@ -11,8 +11,10 @@ import { UpdateLineItemCostDto } from 'src/order/dtos/UpdateLIneItemCosts.dto';
 import { LineItem } from 'src/order/typeorm/entities/LineItem.entity';
 import { Order } from 'src/order/typeorm/entities/Order.entity';
 import { Return } from 'src/order/typeorm/entities/Return.entity';
+import { ShippingCharge } from 'src/order/typeorm/entities/ShippingCharge.entity';
 import { CreateReturnDto } from 'src/users/dtos/CreateReturn.dto';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
+import { ShippingChargeService } from '../shipping-charge/shipping-charge.service';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +24,8 @@ export class OrderService {
     private lineItemRepository: Repository<LineItem>,
     @InjectRepository(Return) private returnRepository: Repository<Return>,
     private productService: ProductsService,
+    @InjectRepository(ShippingCharge)
+    private shippingService: ShippingChargeService,
   ) {}
 
   // async createOrder(
@@ -94,6 +98,10 @@ export class OrderService {
 
     const adjustedTotalAmount = grandTotal;
 
+    const shipping = this.shippingService.getShippingChargeById(
+      createOrderDto.areaId,
+    );
+
     const order = this.orderRepository.create({
       user: { id: userId },
       ...createOrderDto,
@@ -156,8 +164,8 @@ export class OrderService {
           }
 
           lineItem.cost = +cost;
-          lineItem.qty = +lineItem.qty;
-          lineItem.lineAmt = lineItem.qty * lineItem.price;
+          // lineItem.qty = +lineItem.qty;
+          // lineItem.lineAmt = lineItem.qty * lineItem.price;
 
           return transactionalEntityManager.save(lineItem);
         });
@@ -272,9 +280,9 @@ export class OrderService {
   }
 
   private async processReturns(
-    lineItems,
-    order,
-    queryRunner,
+    lineItems: { lineItemId: any; returnQty: any; returnReason: any }[],
+    order: Order,
+    queryRunner: QueryRunner,
   ): Promise<Return[]> {
     return Promise.all(
       lineItems.map(async ({ lineItemId, returnQty, returnReason }) => {
