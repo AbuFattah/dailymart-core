@@ -1,6 +1,13 @@
 import { Cart } from 'src/cart/typeorm/entities/Cart.entity';
 import { Order } from 'src/order/typeorm/entities/Order.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -15,8 +22,17 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
+  name: string;
+
+  @Column({ nullable: true })
   password: string;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column('text', { array: true, default: [] })
+  providers: string[];
 
   @Column({ type: 'enum', enum: UserRole }) // admin or customer
   role: UserRole;
@@ -24,10 +40,10 @@ export class User {
   @Column({ default: '' })
   profile: string;
 
-  @Column({ default: new Date() })
+  @CreateDateColumn()
   created_at: Date;
 
-  @Column({ default: new Date() })
+  @UpdateDateColumn()
   Updated_at: Date;
 
   @Column({ nullable: true })

@@ -23,6 +23,7 @@ import { CartModule } from './cart/cart.module';
 import { Cart } from './cart/typeorm/entities/Cart.entity';
 import { CartItem } from './cart/typeorm/entities/CartItem.entity';
 import { ShippingCharge } from './order/typeorm/entities/ShippingCharge.entity';
+import { NotificationsModule } from './notifications/notifications.module';
 
 // @Module({
 //   imports: [
@@ -91,6 +92,7 @@ import { ShippingCharge } from './order/typeorm/entities/ShippingCharge.entity';
     InventoryModule,
     OrderModule,
     CartModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

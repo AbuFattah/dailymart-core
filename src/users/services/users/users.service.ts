@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/typeorm/entities/User.entity';
+import { User, UserRole } from 'src/typeorm/entities/User.entity';
 import { hashPassword } from 'src/utils/bcrypt';
 import {
   CreateUserParams,
@@ -23,11 +23,13 @@ export class UsersService {
     // const { email, password, role } = createUserParams;
     const password = hashPassword(userDetails.password);
 
+    const providers = ['local'];
+
     try {
       const user = this.userRepository.create({
         ...userDetails,
         password,
-        created_at: new Date(),
+        providers,
       });
       return await this.userRepository.save(user);
     } catch (error) {
@@ -36,6 +38,50 @@ export class UsersService {
       }
       throw new InternalServerErrorException('An unexpected error occurred.');
     }
+  }
+
+  async createGoogleUser(userDetails: {
+    email: string;
+    name: string;
+    googleId: string;
+  }): Promise<User> {
+    try {
+      const providers = ['google'];
+      const user = this.userRepository.create({
+        ...userDetails,
+        role: UserRole.CUSTOMER,
+        password: null,
+        googleId: userDetails.googleId,
+        providers,
+      });
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException('User with this email already exists.');
+      }
+      throw error;
+    }
+  }
+
+  async linkGoogleAccount({ email, googleId }) {
+    const user = await this.findOneByEmail(email);
+
+    if (!user) {
+      return null;
+    }
+
+    const providers = user.providers;
+
+    providers.push('google');
+
+    const data = await this.userRepository.create({
+      googleId,
+      providers,
+    });
+
+    await this.userRepository.save(data);
+
+    return 1;
   }
 
   async findOneByEmail(email: string): Promise<User> {
