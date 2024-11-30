@@ -21,19 +21,19 @@ export class CartController {
     @Query('tempCartId') tempCartId: string,
     @Req() req,
   ) {
-    const userId = req.user?.id;
+    const userId = req?.user?.id || null;
     return this.cartService.addToCart(tempCartId, addToCartDto, userId);
   }
 
   @Get()
   getCart(@Query('tempCartId') tempCartId: string, @Req() req) {
-    const userId = req.user?.id;
+    const userId = req?.user?.id || null;
     return this.cartService.findOrCreateCart(tempCartId, userId);
   }
 
   @Post('merge')
   mergeCarts(@Query('tempCartId') tempCartId: string, @Req() req) {
-    const userId = req.user?.id;
+    const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedException();
     return this.cartService.mergeCarts(tempCartId, userId);
   }
@@ -44,8 +44,11 @@ export class CartController {
     @Query('tempCartId') tempCartId: string,
     @Req() req,
   ) {
-    const userId = req.user?.id; // Extract user ID if logged in
+    const userId: number = req?.user?.id || null;
     return this.cartService.updateCartItem(
+      tempCartId,
+      userId,
+      updateCartDto.cartId,
       updateCartDto.cartItemId,
       updateCartDto.qty,
     );

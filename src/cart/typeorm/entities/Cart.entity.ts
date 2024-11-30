@@ -10,11 +10,11 @@ import { CartItem } from './CartItem.entity';
 
 @Entity()
 export class Cart {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  tempCartId: string; // For non-logged-in users
+  tempCartId: string;
 
   @ManyToOne(() => User, (user) => user.carts, { nullable: true })
   user: User;
@@ -24,6 +24,12 @@ export class Cart {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   subtotal: number;
+
+  @Column({ nullable: true })
+  shippingArea: string;
+
+  @Column({ type: 'int' })
+  shipping: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   discount: number;

@@ -14,6 +14,12 @@ export class ShippingChargeService {
     return await this.shippingRepository.find();
   }
 
+  async getShippingInfo(id: number) {
+    const data = await this.shippingRepository.findOne({ where: { id: id } });
+
+    return data;
+  }
+
   async getShippingChargeById(id: number): Promise<number> {
     const data = await this.shippingRepository.findOne({ where: { id: id } });
 

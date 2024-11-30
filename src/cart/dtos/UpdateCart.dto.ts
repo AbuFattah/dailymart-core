@@ -1,6 +1,10 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsUUID } from 'class-validator';
+import { UUID } from 'crypto';
 
 export class UpdateCartDto {
+  @IsUUID()
+  cartId: UUID;
+
   @IsNumber()
   cartItemId: number;
 

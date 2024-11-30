@@ -4,6 +4,8 @@ import { AddToCartDto } from 'src/cart/dtos/AddToCart.dto';
 import { Cart } from 'src/cart/typeorm/entities/Cart.entity';
 import { CartItem } from 'src/cart/typeorm/entities/CartItem.entity';
 import { ProductsService } from 'src/catalog/services/products/products.service';
+import { ShippingChargeService } from 'src/order/services/shipping-charge/shipping-charge.service';
+import { ShippingCharge } from 'src/order/typeorm/entities/ShippingCharge.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class CartService {
     @InjectRepository(CartItem)
     private cartItemRepository: Repository<CartItem>,
     private productService: ProductsService,
+    private shippingService: ShippingChargeService,
   ) {}
 
   async findOrCreateCart(tempCartId: string, userId?: number): Promise<Cart> {
@@ -56,16 +59,16 @@ export class CartService {
     });
 
     if (existingItem) {
-      existingItem.qty += addToCartDto.qty;
-      existingItem.lineAmt = existingItem.qty * product.price;
+      existingItem.qty = +existingItem.qty + +addToCartDto.qty;
+      existingItem.lineAmt = +existingItem.qty * +product.price;
       await this.cartItemRepository.save(existingItem);
     } else {
       const cartItem = this.cartItemRepository.create({
         cart,
         product,
-        qty: addToCartDto.qty,
-        price: product.price,
-        lineAmt: addToCartDto.qty * product.price,
+        qty: +addToCartDto.qty,
+        price: +product.price,
+        lineAmt: +addToCartDto.qty * +product.price,
       });
       await this.cartItemRepository.save(cartItem);
     }
@@ -73,11 +76,20 @@ export class CartService {
     return this.updateCartTotals(cart);
   }
 
-  async updateCartTotals(cart: Cart): Promise<Cart> {
+  async updateCartTotals(
+    cart: Cart,
+    shippingInfo?: ShippingCharge,
+  ): Promise<Cart> {
     const cartItems = await this.cartItemRepository.find({ where: { cart } });
     const subtotal = cartItems.reduce((sum, item) => sum + item.lineAmt, 0);
     const discount = 0;
-    const grandTotal = subtotal - discount;
+    let shipping = 0;
+    if (shippingInfo) {
+      cart.shipping = shippingInfo.charge;
+      cart.shippingArea = shippingInfo.area;
+      shipping = shippingInfo.charge;
+    }
+    const grandTotal = subtotal - discount - shipping;
 
     cart.subtotal = subtotal;
     cart.discount = discount;
@@ -87,6 +99,9 @@ export class CartService {
   }
 
   async mergeCarts(tempCartId: string, userId: number): Promise<Cart> {
+    if (!userId) {
+      throw new NotFoundException('User Id not found');
+    }
     const tempCart = await this.cartRepository.findOne({
       where: { tempCartId },
       relations: ['cartItems'],
@@ -99,8 +114,8 @@ export class CartService {
           where: { cart: userCart, product: tempItem.product },
         });
         if (existingItem) {
-          existingItem.qty += tempItem.qty;
-          existingItem.lineAmt = existingItem.qty * tempItem.price;
+          existingItem.qty = +existingItem.qty + +tempItem.qty;
+          existingItem.lineAmt = +existingItem.qty * +tempItem.price;
           await this.cartItemRepository.save(existingItem);
         } else {
           tempItem.cart = userCart;
@@ -113,11 +128,25 @@ export class CartService {
     return this.updateCartTotals(userCart);
   }
 
-  async updateCartItem(cartItemId: number, qty: number): Promise<Cart> {
-    const cartItem = await this.cartItemRepository.findOne({
-      where: { id: cartItemId },
-      relations: ['cart'],
-    });
+  async updateCartItem(
+    tempCartId: string,
+    userId: number,
+    cartId: string,
+    cartItemId: number,
+    qty: number,
+  ): Promise<Cart> {
+    let cartItem: CartItem;
+    if (userId) {
+      cartItem = await this.cartItemRepository.findOne({
+        where: { id: cartItemId, cart: { id: cartId, user: { id: userId } } },
+        relations: ['cart'],
+      });
+    } else {
+      cartItem = await this.cartItemRepository.findOne({
+        where: { id: cartItemId, cart: { id: cartId, tempCartId: tempCartId } },
+        relations: ['cart'],
+      });
+    }
 
     if (!cartItem) {
       throw new NotFoundException('CartItem not found');
@@ -133,7 +162,35 @@ export class CartService {
       await this.cartItemRepository.save(cartItem);
     }
 
-    // Update cart totals and return the updated cart
     return this.updateCartTotals(cart);
+  }
+
+  async removeCartItem(cartId: string, cartItemId: number) {
+    const cartItem = await this.cartItemRepository.findOne({
+      where: { id: cartItemId, cart: { id: cartId } },
+      relations: ['cart'],
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException('CartItem not found');
+    }
+
+    await this.cartItemRepository.remove(cartItem);
+
+    return { message: 'success', code: 1 };
+  }
+
+  async calculateShipping(
+    shippingAreaId: number,
+    tempCartId: string,
+    userId?: number,
+  ) {
+    const shippingInfo =
+      await this.shippingService.getShippingInfo(shippingAreaId);
+
+    const cart = await this.findOrCreateCart(tempCartId, userId);
+
+    cart.shipping = shippingInfo.charge;
+    cart.shippingArea = shippingInfo.area;
   }
 }
