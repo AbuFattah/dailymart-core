@@ -4,6 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
+import { CreateProductDto } from 'src/catalog/dtos/products/CreateProduct.dto';
 import { UpdateProductDto } from 'src/catalog/dtos/products/UpdateProduct.dto';
 import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { CreateProductParams, UpdateProductParams } from 'src/catalog/Types';
@@ -33,7 +36,30 @@ export class ProductsService {
     }
   }
 
-  async getProductById(id: number) {
+  async createProducts(productDetails: CreateProductDto[]): Promise<Product[]> {
+    try {
+      // transform plain JSON to DTO instances and validate each
+      const products = plainToInstance(CreateProductDto, productDetails);
+      for (const product of products) {
+        await validateOrReject(product);
+      }
+
+      // adding timestamps
+      const productsToSave = products.map((product) => ({
+        ...product,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }));
+
+      return await this.productRepository.save(productsToSave);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error creating products. Error: ${error.message}`,
+      );
+    }
+  }
+
+  async getProductById(id: string) {
     const product = await this.productRepository.findOne({
       where: { id, status: 'active' },
       relations: ['inventory'],
@@ -45,7 +71,7 @@ export class ProductsService {
     return product;
   }
 
-  async getInactiveProductById(id: number) {
+  async getInactiveProductById(id: string) {
     const product = await this.productRepository.findOneBy({
       id,
       status: 'inactive',
@@ -74,7 +100,7 @@ export class ProductsService {
   }
 
   async updateProduct(
-    id: number,
+    id: string,
     updateProductsDetails: UpdateProductParams,
   ): Promise<Product> {
     try {
@@ -101,7 +127,7 @@ export class ProductsService {
     }
   }
 
-  async activateProductById(id: number) {
+  async activateProductById(id: string) {
     const product = await this.getInactiveProductById(id);
     product.status = 'active';
 
@@ -109,7 +135,7 @@ export class ProductsService {
     return activeProduct;
   }
 
-  async removeProduct(id: number) {
+  async removeProduct(id: string) {
     try {
       const product = await this.getProductById(id);
       product.status = 'inactive';

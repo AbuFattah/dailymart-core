@@ -1,8 +1,8 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsUUID } from 'class-validator';
 
 export class AddToCartDto {
-  @IsNumber()
-  productId: number;
+  @IsUUID()
+  productId: string;
 
   @IsNumber()
   qty: number;

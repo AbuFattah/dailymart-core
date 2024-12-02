@@ -17,7 +17,7 @@ export class UpdateStockHistoryParams {
 }
 
 export class StockHistoryResponse {
-  id: number;
+  id: string;
   product: Product;
   actionType: string;
   lastQuantity: number;

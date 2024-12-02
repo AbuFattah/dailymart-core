@@ -88,15 +88,15 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async findById(id: number): Promise<User> {
+  async findById(id: string): Promise<User> {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, userDetails: UpdateUserParams) {
+  async update(id: string, userDetails: UpdateUserParams) {
     return await this.userRepository.update({ id }, { ...userDetails });
   }
 
-  async updatePassword(id: number, passwordDetails: UpdatePassParams) {
+  async updatePassword(id: string, passwordDetails: UpdatePassParams) {
     const password = hashPassword(passwordDetails.password);
     return await this.userRepository.update({ id }, { password });
   }

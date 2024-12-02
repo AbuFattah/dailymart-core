@@ -44,7 +44,7 @@ export class CartController {
     @Query('tempCartId') tempCartId: string,
     @Req() req,
   ) {
-    const userId: number = req?.user?.id || null;
+    const userId: string = req?.user?.id || null;
     return this.cartService.updateCartItem(
       tempCartId,
       userId,

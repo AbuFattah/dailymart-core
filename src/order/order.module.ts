@@ -9,6 +9,9 @@ import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { Return } from './typeorm/entities/Return.entity';
 import { ShippingCharge } from './typeorm/entities/ShippingCharge.entity';
 import { ShippingChargeService } from './services/shipping-charge/shipping-charge.service';
+import { CartService } from 'src/cart/service/cart/cart.service';
+import { Cart } from 'src/cart/typeorm/entities/Cart.entity';
+import { CartItem } from 'src/cart/typeorm/entities/CartItem.entity';
 
 @Module({
   imports: [
@@ -18,9 +21,16 @@ import { ShippingChargeService } from './services/shipping-charge/shipping-charg
       Product,
       Return,
       ShippingCharge,
+      Cart,
+      CartItem,
     ]),
   ],
-  providers: [OrderService, ProductsService, ShippingChargeService],
+  providers: [
+    OrderService,
+    ProductsService,
+    ShippingChargeService,
+    CartService,
+  ],
   controllers: [OrderController],
 })
 export class OrderModule {}

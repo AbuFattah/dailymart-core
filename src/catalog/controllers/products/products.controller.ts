@@ -16,6 +16,7 @@ import { RolesGuard } from 'src/auth/utils/roles.guard';
 import { CreateProductDto } from 'src/catalog/dtos/products/CreateProduct.dto';
 import { UpdateProductDto } from 'src/catalog/dtos/products/UpdateProduct.dto';
 import { ProductsService } from 'src/catalog/services/products/products.service';
+import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 
 @Controller('products')
 @Roles('admin')
@@ -29,8 +30,17 @@ export class ProductsController {
     return this.productService.createProduct(createProductDto);
   }
 
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post('bulk-create')
+  async bulkCreateProducts(
+    @Body() productDetails: CreateProductDto[],
+  ): Promise<Product[]> {
+    return await this.productService.createProducts(productDetails);
+  }
+
   @Get(':id')
-  async getProductById(@Param('id') id: number) {
+  async getProductById(@Param('id') id: string) {
     return this.productService.getProductById(id);
   }
 
@@ -50,14 +60,14 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':id')
   async updateProduct(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productService.updateProduct(id, updateProductDto);
   }
 
   @Patch('activate/:id')
-  async activateProduct(@Param('id') id: number) {
+  async activateProduct(@Param('id') id: string) {
     const product = await this.productService.getInactiveProductById(id);
     if (!product) {
       throw new NotFoundException('Product not found or already active');
@@ -66,7 +76,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  async removeProduct(@Param('id') id: number) {
+  async removeProduct(@Param('id') id: string) {
     return this.productService.removeProduct(id);
   }
 }

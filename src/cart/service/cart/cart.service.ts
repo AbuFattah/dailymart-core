@@ -18,7 +18,7 @@ export class CartService {
     private shippingService: ShippingChargeService,
   ) {}
 
-  async findOrCreateCart(tempCartId: string, userId?: number): Promise<Cart> {
+  async findOrCreateCart(tempCartId: string, userId?: string): Promise<Cart> {
     let cart: Cart;
 
     if (userId) {
@@ -44,10 +44,30 @@ export class CartService {
     return cart;
   }
 
+  async findCartOrNull(tempCartId: string, userId?: string): Promise<Cart> {
+    let cart: Cart;
+
+    if (userId) {
+      cart = await this.cartRepository.findOne({
+        where: { user: { id: userId } },
+        relations: ['cartItems'],
+      });
+    } else {
+      cart = await this.cartRepository.findOne({
+        where: { tempCartId },
+        relations: ['cartItems'],
+      });
+    }
+
+    if (!cart) return null;
+
+    return cart;
+  }
+
   async addToCart(
     tempCartId: string,
     addToCartDto: AddToCartDto,
-    userId?: number,
+    userId?: string,
   ): Promise<Cart> {
     const cart = await this.findOrCreateCart(tempCartId, userId);
 
@@ -98,7 +118,7 @@ export class CartService {
     return this.cartRepository.save(cart);
   }
 
-  async mergeCarts(tempCartId: string, userId: number): Promise<Cart> {
+  async mergeCarts(tempCartId: string, userId: string): Promise<Cart> {
     if (!userId) {
       throw new NotFoundException('User Id not found');
     }
@@ -130,7 +150,7 @@ export class CartService {
 
   async updateCartItem(
     tempCartId: string,
-    userId: number,
+    userId: string,
     cartId: string,
     cartItemId: number,
     qty: number,
@@ -183,7 +203,7 @@ export class CartService {
   async calculateShipping(
     shippingAreaId: number,
     tempCartId: string,
-    userId?: number,
+    userId?: string,
   ) {
     const shippingInfo =
       await this.shippingService.getShippingInfo(shippingAreaId);

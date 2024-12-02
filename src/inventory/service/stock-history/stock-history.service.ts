@@ -43,7 +43,7 @@ export class StockHistoryService {
 
   async createStockHistoryAction(
     actionType: 'increase' | 'decrease' | 'clear',
-    productId: number,
+    productId: string,
     quantityChanged: number,
     lastQuantity: number,
   ): Promise<StockHistory> {
@@ -105,7 +105,7 @@ export class StockHistoryService {
   }
 
   // Get stock history by ID
-  async findStockHistoryById(id: number): Promise<StockHistoryResponse> {
+  async findStockHistoryById(id: string): Promise<StockHistoryResponse> {
     const stockHistory = await this.stockHistoryRepository.findOne({
       where: { id },
     });
@@ -118,7 +118,7 @@ export class StockHistoryService {
   }
 
   async findStockHistoryByProductId(
-    productId: number,
+    productId: string,
   ): Promise<StockHistory[]> {
     const stockHistory = await this.stockHistoryRepository.find({
       where: { product: { id: productId } },
@@ -135,7 +135,7 @@ export class StockHistoryService {
 
   // Update stock history record
   async updateStockHistoryById(
-    id: number,
+    id: string,
     updateStockHistoryDetails: UpdateStockHistoryParams,
   ): Promise<StockHistoryResponse> {
     const stockHistory = await this.stockHistoryRepository.findOne({
@@ -156,7 +156,7 @@ export class StockHistoryService {
   }
 
   // Delete stock history record
-  async removeStockHistoryById(id: number): Promise<void> {
+  async removeStockHistoryById(id: string): Promise<void> {
     const stockHistory = await this.stockHistoryRepository.findOne({
       where: { id },
     });

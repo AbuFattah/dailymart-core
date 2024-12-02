@@ -51,7 +51,7 @@ export class LineItem {
   @Column({ default: 'Not Returned' })
   returnStatus: string; // 'Not Returned', 'Partially Returned', 'Returned'
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   refundAmount: number;
 

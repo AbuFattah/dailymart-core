@@ -1,9 +1,9 @@
-import { IsNumber, IsNotEmpty, IsPositive } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsPositive, IsUUID } from 'class-validator';
 
 export class CreateLineItemDto {
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  productId: number;
+  productId: string;
 
   @IsNumber()
   @IsPositive()

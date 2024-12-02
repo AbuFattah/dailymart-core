@@ -10,8 +10,8 @@ import {
 
 @Entity({ name: 'inventory' })
 export class Inventory {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @OneToOne(() => Product, (product) => product.inventory)
   @JoinColumn({ name: 'product_id' })

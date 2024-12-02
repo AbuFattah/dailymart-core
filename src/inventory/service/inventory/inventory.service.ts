@@ -30,8 +30,9 @@ export class InventoryService {
     @InjectQueue('stock-queue') private stockQueue: Queue,
   ) {}
 
-  async addInventory(productId: number, quantity: number) {
+  async addInventory(productId: string, quantity: number) {
     try {
+      console.log(productId);
       // return { success: true };
 
       // const product = await this.productService.getProductById(productId);
@@ -47,18 +48,18 @@ export class InventoryService {
       //   );
       // }
 
-      const inventory = await this.inventoryRepository
+      let inventory = await this.inventoryRepository
         .createQueryBuilder('inventory')
         .leftJoinAndSelect('inventory.product', 'product')
         .where('inventory.product_id = :productId', { productId })
         .addSelect('product.name') // only load the product's name
         .getOne();
 
-      if (!inventory || !inventory.product) {
-        throw new NotFoundException(
-          `Product with ID ${productId} does not exist.`,
-        );
-      }
+      // if (!inventory || !inventory.product) {
+      //   throw new NotFoundException(
+      //     `Product with ID ${productId} does not exist.`,
+      //   );
+      // }
 
       // inventory ? this.inventoryRepository.save({...inventory,qty: inventory.qty + quantity}) : this.inventoryRepository.save({})
 
@@ -68,12 +69,21 @@ export class InventoryService {
           qty: inventory.qty + quantity,
         });
       } else {
-        const newInventory = this.inventoryRepository.create({
+        const product = await this.productService.getProductById(productId);
+
+        // console.log(product);
+        if (!product) {
+          throw new NotFoundException('invalid product id');
+        }
+
+        inventory = this.inventoryRepository.create({
           product: { id: productId },
           qty: quantity,
         });
 
-        await this.inventoryRepository.save(newInventory);
+        // console.log(inventory);
+
+        await this.inventoryRepository.save(inventory);
       }
 
       const lastQuantity = inventory.qty || 0;
@@ -88,7 +98,7 @@ export class InventoryService {
 
       return {
         id: inventory.id,
-        qty: inventory.qty,
+        qty: inventory.qty + quantity,
         productId: productId,
         productName: inventory.product.name,
       };
@@ -170,7 +180,7 @@ export class InventoryService {
   // }
 
   async removeInventory(
-    productId: number,
+    productId: string,
     quantity: number,
   ): Promise<Inventory> {
     try {
@@ -219,7 +229,7 @@ export class InventoryService {
     }
   }
 
-  async getInventoryByProductId(productId: number): Promise<Inventory> {
+  async getInventoryByProductId(productId: string): Promise<Inventory> {
     const inventory = await this.inventoryRepository.findOne({
       where: { product: { id: productId } },
     });
@@ -262,7 +272,7 @@ export class InventoryService {
   }
 
   async updateInventory(
-    productId: number,
+    productId: string,
     newQuantity: number,
   ): Promise<Inventory> {
     const inventory = await this.inventoryRepository.findOne({
@@ -278,14 +288,14 @@ export class InventoryService {
     return this.inventoryRepository.save(inventory);
   }
 
-  async isInStock(productId: number, quantity: number): Promise<boolean> {
+  async isInStock(productId: string, quantity: number): Promise<boolean> {
     const inventory = await this.inventoryRepository.findOne({
       where: { product: { id: productId } },
     });
     return inventory && inventory.qty >= quantity;
   }
 
-  async clearInventory(productId: number): Promise<Inventory> {
+  async clearInventory(productId: string): Promise<Inventory> {
     const inventory = await this.inventoryRepository.findOne({
       where: { product: { id: productId } },
     });

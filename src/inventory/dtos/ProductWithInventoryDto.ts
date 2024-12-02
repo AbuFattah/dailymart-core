@@ -1,6 +1,15 @@
+import { IsNumber, IsString, IsUUID } from 'class-validator';
+
 export class ProductWithInventoryDto {
-  product_id: number;
+  @IsUUID()
+  product_id: string;
+
+  @IsString()
   name: string;
+
+  @IsString()
   brand: string;
+
+  @IsNumber()
   qty: number;
 }

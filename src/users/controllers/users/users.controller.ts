@@ -47,7 +47,7 @@ export class UsersController {
     @Body() updatePassDto: UpdatePassDto,
   ) {
     const user: any = req.user;
-    const id: number = +user.id;
+    const id: string = user.id;
     const { confirmNewPassword, currentPassword, newPassword } = updatePassDto;
 
     const userInDb = await this.usersService.findById(id);

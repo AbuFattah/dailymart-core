@@ -31,8 +31,8 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('create')
-  async createOrder(
+  @Post('create-manual')
+  async createManualOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Req() req: Request,
   ): Promise<Order> {
@@ -43,7 +43,7 @@ export class OrderController {
     //   throw new NotFoundException('User not found');
     // }
 
-    return this.orderService.createOrder(createOrderDto, userId);
+    return this.orderService.createManualOrder(createOrderDto, userId);
   }
 
   @Get()
@@ -60,7 +60,7 @@ export class OrderController {
   }
 
   @Get('user/:id')
-  async getOrdersByUserId(@Param('id', ParseIntPipe) id: number) {
+  async getOrdersByUserId(@Param('id') id: string) {
     return this.orderService.getOrdersByUserId(id);
   }
 

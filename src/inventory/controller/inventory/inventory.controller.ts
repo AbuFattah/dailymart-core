@@ -27,7 +27,7 @@ export class InventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('add/:productId')
   async addInventory(
-    @Param('productId') productId: number,
+    @Param('productId') productId: string,
     @Body('quantity') quantity: number,
   ) {
     return this.inventoryService.addInventory(productId, quantity);
@@ -36,7 +36,7 @@ export class InventoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':productId')
   async updateInventory(
-    @Param('productId') productId: number,
+    @Param('productId') productId: string,
     @Body('newQuantity') newQuantity: number,
   ): Promise<Inventory> {
     return this.inventoryService.updateInventory(productId, newQuantity);
@@ -44,7 +44,7 @@ export class InventoryController {
 
   @Post('remove/:productId')
   async removeInventory(
-    @Param('productId') productId: number,
+    @Param('productId') productId: string,
     @Body('quantity') quantity: number,
   ): Promise<Inventory> {
     return this.inventoryService.removeInventory(productId, quantity);
@@ -52,14 +52,14 @@ export class InventoryController {
 
   @Get(':productId')
   async getInventoryByProductId(
-    @Param('productId') productId: number,
+    @Param('productId') productId: string,
   ): Promise<Inventory> {
     return this.inventoryService.getInventoryByProductId(productId);
   }
 
   @Patch('clear/:productId')
   async clearInventory(
-    @Param('productId') productId: number,
+    @Param('productId') productId: string,
   ): Promise<Inventory> {
     return this.inventoryService.clearInventory(productId);
   }

@@ -15,6 +15,10 @@ import { ShippingCharge } from 'src/order/typeorm/entities/ShippingCharge.entity
 import { CreateReturnDto } from 'src/users/dtos/CreateReturn.dto';
 import { QueryRunner, Repository } from 'typeorm';
 import { ShippingChargeService } from '../shipping-charge/shipping-charge.service';
+import { CartService } from 'src/cart/service/cart/cart.service';
+import { Cart } from 'src/cart/typeorm/entities/Cart.entity';
+import { CartItem } from 'src/cart/typeorm/entities/CartItem.entity';
+import { error } from 'console';
 
 @Injectable()
 export class OrderService {
@@ -24,8 +28,8 @@ export class OrderService {
     private lineItemRepository: Repository<LineItem>,
     @InjectRepository(Return) private returnRepository: Repository<Return>,
     private productService: ProductsService,
-    @InjectRepository(ShippingCharge)
     private shippingService: ShippingChargeService,
+    private cartService: CartService,
   ) {}
 
   // async createOrder(
@@ -83,9 +87,9 @@ export class OrderService {
   //   return this.orderRepository.save(order);
   // }
 
-  async createOrder(
+  async createManualOrder(
     createOrderDto: CreateOrderDto,
-    userId: number,
+    userId: string,
   ): Promise<Order> {
     const lineItemsData = await this.createLineItems(createOrderDto.lineItems);
 
@@ -101,6 +105,52 @@ export class OrderService {
     const shipping = this.shippingService.getShippingChargeById(
       createOrderDto.areaId,
     );
+
+    const order = this.orderRepository.create({
+      user: { id: userId },
+      ...createOrderDto,
+      paymentMethod: createOrderDto.paymentMethod,
+      status: 'placed',
+      discount,
+      subtotal,
+      grandtotal: grandTotal,
+      adjustedTotalAmount,
+      lineItems: lineItemsData,
+    });
+
+    return this.orderRepository.save(order);
+  }
+
+  async createOrder(
+    tempCartId: string,
+    createOrderDto: CreateOrderDto,
+    userId: string,
+  ): Promise<Order> {
+    const cart: Cart | null = await this.cartService.findCartOrNull(
+      tempCartId,
+      userId,
+    );
+
+    if (!cart) {
+      throw new NotFoundException('Invalid Cart');
+    }
+
+    const lineItemsData = await this.createLineItems(createOrderDto.lineItems);
+
+    // Helper method to calculate summary
+    // const { subtotal, discount, grandTotal } = this.calculateOrderSummary(
+    //   lineItemsData,
+    //   createOrderDto.discount,
+    //   createOrderDto.tax,
+    // );
+
+    const { subtotal, discount, grandTotal, shipping, shippingArea } = cart;
+
+    const adjustedTotalAmount = grandTotal;
+
+    // const shipping = this.shippingService.getShippingChargeById(
+    //   createOrderDto.areaId,
+    // );
 
     const order = this.orderRepository.create({
       user: { id: userId },
@@ -138,7 +188,7 @@ export class OrderService {
     });
   }
 
-  async getOrdersByUserId(userId: number) {
+  async getOrdersByUserId(userId: string) {
     return this.orderRepository.find({
       where: { user: { id: userId } },
       relations: ['lineItems'],
@@ -254,6 +304,33 @@ export class OrderService {
     return lineItemsData;
   }
 
+  async createLineItemsFromCart(cartItems: CartItem[]): Promise<LineItem[]> {
+    const lineItemsData = await Promise.all(
+      cartItems.map(async (cartItem) => {
+        const product = await this.productService.getProductById(
+          cartItem.product.id,
+        );
+        const cost = +product.cost || 0;
+        const lineAmt = +cartItem.price * +cartItem.qty;
+
+        const lineItemEntity = this.lineItemRepository.create({
+          product,
+          name: product.name,
+          size: product.size,
+          qty: +cartItem.qty,
+          price: +cartItem.price,
+          lineAmt,
+          cost,
+        });
+
+        await this.lineItemRepository.save(lineItemEntity);
+        return lineItemEntity;
+      }),
+    );
+
+    return lineItemsData;
+  }
+
   calculateOrderSummary(
     lineItems: LineItem[],
     discount: number = 0,
@@ -269,9 +346,12 @@ export class OrderService {
     };
   }
 
-  private async getLineItem(lineItemId: number): Promise<LineItem> {
+  private async getLineItem(
+    lineItemId: number,
+    orderId: string,
+  ): Promise<LineItem> {
     const lineItem = await this.lineItemRepository.findOne({
-      where: { id: lineItemId },
+      where: { id: lineItemId, order: { id: orderId } },
     });
     if (!lineItem) {
       throw new NotFoundException(`Line item with ID ${lineItemId} not found`);
@@ -286,8 +366,19 @@ export class OrderService {
   ): Promise<Return[]> {
     return Promise.all(
       lineItems.map(async ({ lineItemId, returnQty, returnReason }) => {
-        const lineItem = await this.getLineItem(lineItemId);
+        const lineItem = await this.getLineItem(lineItemId, order.id);
+        if (!lineItem) {
+          throw new NotFoundException(
+            'Lineitem not found with this orderId and lineiItemId',
+          );
+        }
         const refundAmount = +returnQty * +lineItem.price;
+
+        if (lineItem.qty === lineItem.returnQty) {
+          throw new BadRequestException(
+            'Product fully returned' + ' lineitemid: ' + lineItem.id,
+          );
+        }
 
         await this.updateLineItemForReturn(
           lineItem,
@@ -331,8 +422,12 @@ export class OrderService {
       order.lineItems.reduce((sum, li) => sum + +li.qty, 0)
         ? 'Fully Returned'
         : 'Partially Returned';
+
     order.adjustedTotalAmount =
-      +order.grandtotal - returns.reduce((sum, r) => sum + +r.refundAmount, 0);
+      +order.adjustedTotalAmount -
+      returns.reduce((sum, r) => sum + +r.refundAmount, 0);
+
+    if (order.adjustedTotalAmount < 0) order.adjustedTotalAmount = 0;
 
     await this.lineItemRepository.manager.save(order);
   }

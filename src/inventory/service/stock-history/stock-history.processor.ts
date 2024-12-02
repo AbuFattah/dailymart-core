@@ -9,7 +9,7 @@ import {
 
 // Define the job data interface for type safety
 interface StockHistoryJobData {
-  productId: number;
+  productId: string;
   quantity: number;
   actionType: 'increase' | 'decrease' | 'clear';
   lastQuantity: number;
