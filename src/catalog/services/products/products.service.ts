@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import {
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -15,10 +16,12 @@ import { CreateProductParams, UpdateProductParams } from 'src/catalog/Types';
 import { ProductWithInventoryDto } from 'src/inventory/dtos/ProductWithInventoryDto';
 import { Repository } from 'typeorm';
 import { CategoriesService } from '../categories/categories.service';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 @Injectable()
 export class ProductsService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoriesService: CategoriesService,
@@ -108,7 +111,27 @@ export class ProductsService {
     }
   }
 
+  // async getProductById(id: string) {
+  //   const product = await this.productRepository.findOne({
+  //     where: { id, status: 'active' },
+  //     relations: ['inventory'],
+  //   });
+
+  //   if (!product) {
+  //     throw new NotFoundException('Product not found');
+  //   }
+  //   return product;
+  // }
+
   async getProductById(id: string) {
+    const cachedProduct: Product = await this.cacheManager.get(`product:${id}`);
+
+    if (cachedProduct) {
+      console.log(cachedProduct);
+
+      return cachedProduct;
+    }
+
     const product = await this.productRepository.findOne({
       where: { id, status: 'active' },
       relations: ['inventory'],
@@ -117,6 +140,9 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    await this.cacheManager.set(`product:${id}`, product);
+
     return product;
   }
 

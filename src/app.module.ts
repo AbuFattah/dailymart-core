@@ -24,6 +24,8 @@ import { Cart } from './cart/typeorm/entities/Cart.entity';
 import { CartItem } from './cart/typeorm/entities/CartItem.entity';
 import { ShippingCharge } from './order/typeorm/entities/ShippingCharge.entity';
 import { NotificationsModule } from './notifications/notifications.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 
 // @Module({
 //   imports: [
@@ -57,6 +59,13 @@ import { NotificationsModule } from './notifications/notifications.module';
 // })
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+      store: redisStore as any,
+      host: 'localhost',
+      port: 6379,
+      ttl: 3600,
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
       connection: {
