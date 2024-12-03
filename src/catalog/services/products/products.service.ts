@@ -54,6 +54,9 @@ export class ProductsService {
         updated_at: new Date(),
       });
 
+      await this.cacheManager.del(`productsByCategory:${category_id}`);
+      await this.cacheManager.del(`productsBySubcategory:${subcategory_id}`);
+
       return await this.productRepository.save(product);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -159,17 +162,37 @@ export class ProductsService {
   }
 
   async getProductsByCategory(categoryId: string): Promise<Product[]> {
+    const cachedProducts: Product[] = await this.cacheManager.get(
+      `productsByCategory:${categoryId}`,
+    );
+
+    if (cachedProducts) {
+      return cachedProducts;
+    }
     const products = this.productRepository.find({
       where: { category_id: categoryId, status: 'active' },
     });
+
+    await this.cacheManager.set(`productsByCategory:${categoryId}`, products);
 
     return products;
   }
 
   async getProductsBySubcategory(subcategoryId: string): Promise<Product[]> {
+    const cachedProducts: Product[] = await this.cacheManager.get(
+      `productsBySubcategory:${subcategoryId}`,
+    );
+
+    if (cachedProducts) return cachedProducts;
+
     const products = this.productRepository.find({
       where: { subcategory_id: subcategoryId, status: 'active' },
     });
+
+    await this.cacheManager.set(
+      `productsBySubcategory:${subcategoryId}`,
+      products,
+    );
 
     return products;
   }
@@ -193,6 +216,7 @@ export class ProductsService {
         updated_at: new Date(),
       };
       const savedProduct = this.productRepository.save(updatedProduct);
+      await this.cacheManager.set(`product:${id}`, updatedProduct);
       return savedProduct;
       //
     } catch (error) {
@@ -207,6 +231,7 @@ export class ProductsService {
     product.status = 'active';
 
     const activeProduct = this.productRepository.save(product);
+    await this.cacheManager.del(`product:${id}`);
     return activeProduct;
   }
 
@@ -216,6 +241,8 @@ export class ProductsService {
       product.status = 'inactive';
 
       const savedProduct = this.productRepository.save(product);
+
+      await this.cacheManager.del(`product:${id}`);
       return savedProduct;
     } catch (error) {
       throw new InternalServerErrorException(
