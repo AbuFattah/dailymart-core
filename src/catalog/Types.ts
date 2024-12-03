@@ -12,9 +12,9 @@ export type CreateProductParams = {
   description: string;
   origin: string;
   category_id: string;
-  category_name: string;
+  category_name?: string;
   subcategory_id: string;
-  subcategory_name: string;
+  subcategory_name?: string;
   brand: string;
   status: string;
   size: string;

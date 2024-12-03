@@ -1,4 +1,5 @@
 // categories.service.ts
+import { InjectQueue } from '@nestjs/bullmq';
 import {
   Injectable,
   HttpException,
@@ -8,6 +9,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Queue } from 'bullmq';
 import { Model, Types } from 'mongoose';
 import { CreateCategoryDto } from 'src/catalog/dtos/CreateCategory.dto';
 import { CreateDepartmentDto } from 'src/catalog/dtos/CreateDepartment.dto';
@@ -19,6 +21,7 @@ export class CategoriesService {
   constructor(
     @InjectModel(CategoryHierarchy.name)
     private categoriesModel: Model<CategoryHierarchy>,
+    @InjectQueue('products-queue') private productsQueue: Queue,
   ) {}
 
   // Create a new department
@@ -154,6 +157,66 @@ export class CategoriesService {
     }
 
     return { id: updatedDepartment.id, name: updatedDepartment.name };
+  }
+
+  async updateCategoryName(
+    categoryId: string,
+    newName: string,
+  ): Promise<{ id: string; name: string }> {
+    const updatedCategory = await this.categoriesModel.findOneAndUpdate(
+      { 'categories._id': categoryId },
+      { $set: { 'categories.$.name': newName } },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedCategory) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+
+    // Extract the updated category for double checking
+    const category = updatedCategory.categories.find(
+      (cat) => cat._id.toString() === categoryId,
+    );
+
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+    this.productsQueue.add('update-category-name', {
+      id: categoryId,
+      name: newName,
+    });
+
+    return { id: category._id.toString(), name: category.name };
+  }
+
+  async updateSubcategoryName(
+    subcategoryId: string,
+    newName: string,
+  ): Promise<{ id: string; name: string }> {
+    const updatedDocument = await this.categoriesModel.findOneAndUpdate(
+      { 'categories.subcategories._id': subcategoryId }, // Locate the document with the subcategory ID
+      { $set: { 'categories.$[].subcategories.$[subcategory].name': newName } }, // Update the subcategory name
+      {
+        new: true,
+        runValidators: true,
+        arrayFilters: [
+          { 'subcategory._id': subcategoryId }, // Match the subcategory ID
+        ],
+      },
+    );
+
+    if (!updatedDocument) {
+      throw new NotFoundException(
+        `Subcategory with ID ${subcategoryId} not found`,
+      );
+    }
+
+    this.productsQueue.add('update-subcategory-name', {
+      id: subcategoryId,
+      name: newName,
+    });
+
+    return { id: subcategoryId, name: newName };
   }
 
   async deleteDepartment(

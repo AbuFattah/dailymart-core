@@ -10,6 +10,7 @@ import { StockHistoryController } from './controller/stock-history/stock-history
 import { StockHistoryService } from './service/stock-history/stock-history.service';
 import { BullModule } from '@nestjs/bullmq';
 import { StockHistoryProcessor } from './service/stock-history/stock-history.processor';
+import { CatalogModule } from 'src/catalog/catalog.module';
 
 @Module({
   imports: [
@@ -17,6 +18,14 @@ import { StockHistoryProcessor } from './service/stock-history/stock-history.pro
     BullModule.registerQueue({
       name: 'stock-queue',
     }),
+    BullModule.registerQueue({
+      name: 'products-queue',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'fixed', delay: 2000 },
+      },
+    }),
+    CatalogModule,
   ],
   controllers: [InventoryController, StockHistoryController],
   providers: [

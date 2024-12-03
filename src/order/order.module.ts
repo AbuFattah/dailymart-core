@@ -12,6 +12,8 @@ import { ShippingChargeService } from './services/shipping-charge/shipping-charg
 import { CartService } from 'src/cart/service/cart/cart.service';
 import { Cart } from 'src/cart/typeorm/entities/Cart.entity';
 import { CartItem } from 'src/cart/typeorm/entities/CartItem.entity';
+import { BullModule } from '@nestjs/bullmq';
+import { CatalogModule } from 'src/catalog/catalog.module';
 
 @Module({
   imports: [
@@ -24,6 +26,14 @@ import { CartItem } from 'src/cart/typeorm/entities/CartItem.entity';
       Cart,
       CartItem,
     ]),
+    BullModule.registerQueue({
+      name: 'products-queue',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'fixed', delay: 2000 },
+      },
+    }),
+    CatalogModule,
   ],
   providers: [
     OrderService,

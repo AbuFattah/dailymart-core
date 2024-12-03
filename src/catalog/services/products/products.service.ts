@@ -1,9 +1,11 @@
+import { InjectQueue } from '@nestjs/bullmq';
 import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Queue } from 'bullmq';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { CreateProductDto } from 'src/catalog/dtos/products/CreateProduct.dto';
@@ -12,18 +14,39 @@ import { Product } from 'src/catalog/typeorm/entities/Product.entity';
 import { CreateProductParams, UpdateProductParams } from 'src/catalog/Types';
 import { ProductWithInventoryDto } from 'src/inventory/dtos/ProductWithInventoryDto';
 import { Repository } from 'typeorm';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly categoriesService: CategoriesService,
   ) {}
 
   async createProduct(productDetails: CreateProductParams) {
     try {
+      const { category_id, subcategory_id } = productDetails;
+
+      let category_name = '';
+
+      if (category_id) {
+        category_name = (
+          await this.categoriesService.getCategorybyId(category_id)
+        ).categoryName;
+      }
+
+      let subcategory_name = '';
+      if (subcategory_id) {
+        subcategory_name = (
+          await this.categoriesService.getSubcategorybyId(subcategory_id)
+        ).subcategoryName;
+      }
+
       const product = this.productRepository.create({
         ...productDetails,
+        category_name,
+        subcategory_name,
         created_at: new Date(),
         updated_at: new Date(),
       });
@@ -33,6 +56,32 @@ export class ProductsService {
       throw new InternalServerErrorException(
         `Error creating product: ${productDetails.name} , Error: ${error}`,
       );
+    }
+  }
+
+  async updateProductCategoryNameById(categoryId: string, name: string) {
+    try {
+      await this.productRepository.update(
+        { category_id: categoryId },
+        { category_name: name },
+      );
+
+      return { categoryId, categoryName: name };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateProductSubcategoryNameById(subCategoryId: string, name: string) {
+    try {
+      await this.productRepository.update(
+        { subcategory_id: subCategoryId },
+        { subcategory_name: name },
+      );
+
+      return { subCategoryId, subcagoryName: name };
+    } catch (error) {
+      throw error;
     }
   }
 

@@ -64,6 +64,7 @@ import { NotificationsModule } from './notifications/notifications.module';
         port: 6379,
       },
     }),
+
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

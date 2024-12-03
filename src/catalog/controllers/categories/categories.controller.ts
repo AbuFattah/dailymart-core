@@ -16,6 +16,8 @@ import { CategoriesService } from 'src/catalog/services/categories/categories.se
 import { CategoryHierarchy } from 'src/catalog/mongoose/schemas/Categories.schema';
 import { ValidateMongoIdPipe } from 'src/catalog/pipes/ValidateMongoId.pipe';
 import { UpdateDepartmentNameDto } from 'src/catalog/dtos/UpdateDepartmentDto';
+import { UpdateCategoryNameDto } from 'src/catalog/dtos/UpdateCategoryName.dto';
+import { UpdateSubcategoryNameDto } from 'src/catalog/dtos/UpdateSubcategoryName.dto';
 
 @Controller('categoryHierarchy')
 export class CategoriesController {
@@ -59,6 +61,22 @@ export class CategoriesController {
   ): Promise<{ id: string; name: string }> {
     const { id, name } = updateDepartementDto;
     return this.categoriesService.updateDepartmentName(id, name);
+  }
+
+  @Patch('category')
+  async updateCategoryName(
+    @Body() updateCategoryName: UpdateCategoryNameDto,
+  ): Promise<{ id: string; name: string }> {
+    const { id, name } = updateCategoryName;
+    return this.categoriesService.updateCategoryName(id, name);
+  }
+
+  @Patch('subcategory')
+  async updateSubcategoryName(
+    @Body() updateSubcategoryNameDto: UpdateSubcategoryNameDto,
+  ): Promise<{ id: string; name: string }> {
+    const { id, name } = updateSubcategoryNameDto;
+    return this.categoriesService.updateSubcategoryName(id, name);
   }
 
   @Delete('department/:departmentId')

@@ -13,6 +13,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/typeorm/entities/User.entity';
 import { Product } from './typeorm/entities/Product.entity';
 import { ProductsCategories } from './typeorm/entities/Products_Categories.entity';
+import { BullModule } from '@nestjs/bullmq';
+import { ProductsConsumer } from './services/products/products-processor';
 
 @Module({
   imports: [
@@ -20,8 +22,16 @@ import { ProductsCategories } from './typeorm/entities/Products_Categories.entit
     MongooseModule.forFeature([
       { name: CategoryHierarchy.name, schema: CategoriesHierarchySchema },
     ]),
+    BullModule.registerQueue({
+      name: 'products-queue',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'fixed', delay: 2000 },
+      },
+    }),
   ],
   controllers: [CategoriesController, ProductsController],
-  providers: [CategoriesService, ProductsService],
+  providers: [CategoriesService, ProductsService, ProductsConsumer],
+  exports: [CategoriesService],
 })
 export class CatalogModule {}
