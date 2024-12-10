@@ -26,6 +26,7 @@ import { ShippingCharge } from './order/typeorm/entities/ShippingCharge.entity';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { RedisModule } from './redis/redis.module';
 
 // @Module({
 //   imports: [
@@ -59,27 +60,31 @@ import { redisStore } from 'cache-manager-redis-store';
 // })
 @Module({
   imports: [
-    CacheModule.register({
-      isGlobal: true,
-      store: redisStore as any,
-      host: 'localhost',
-      port: 6379,
-      ttl: 3600,
-    }),
+    RedisModule,
+    // CacheModule.register({
+    //   isGlobal: true,
+    //   store: redisStore as any,
+    //   host: process.env.REDIS_HOST || 'familykart-redis',
+    //   port: parseInt(process.env.REDIS_PORT || '6379'),
+    //   ttl: 3600,
+    //   log: {
+    //     error: (error) => console.error('Redis Connection Error:', error),
+    //   },
+    // }),
     ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
       connection: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST || 'familykart-redis',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
       },
     }),
 
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5555,
-      username: 'dailymart',
-      password: 'dailymart@123',
+      host: process.env.PG_HOST || 'familykart-postgres',
+      port: parseInt(process.env.PG_PORT) || 5432,
+      username: process.env.PG_USER || 'dailymart',
+      password: process.env.PG_PASS || 'dailymart@123',
       synchronize: true,
       entities: [
         User,
@@ -107,4 +112,9 @@ import { redisStore } from 'cache-manager-redis-store';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {
+    console.log('Redis Host:', process.env.REDIS_HOST);
+    console.log('Redis Port:', process.env.REDIS_PORT);
+  }
+}

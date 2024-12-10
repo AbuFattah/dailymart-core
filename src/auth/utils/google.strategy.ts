@@ -7,8 +7,8 @@ import { AuthService } from '../services/auth/auth.service';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private authService: AuthService) {
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: process.env.GOOGLE_CLIENT_ID || 'random',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'random',
       callbackURL: 'http://localhost:3000/auth/google-redirect',
       scope: ['email', 'profile'],
     });
@@ -19,28 +19,31 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
-    const { id, name, emails, photos } = profile;
+    try {
+      const { id, name, emails, photos } = profile;
 
-    const user = {
-      email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
-      picture: photos[0].value,
-      accessToken,
-      refreshToken,
-    };
+      const user = {
+        email: emails[0].value,
+        firstName: name.givenName,
+        lastName: name.familyName,
+        picture: photos[0].value,
+        accessToken,
+        refreshToken,
+      };
 
-    const userName = `${user.firstName} ${user.lastName}`;
+      const userName = `${user.firstName} ${user.lastName}`;
 
-    const userData = {
-      email: user.email,
-      name: userName,
-      googleId: id,
-    };
+      const userData = {
+        email: user.email,
+        name: userName,
+        googleId: id,
+      };
 
-    const googleUser = await this.authService.validateGoogleUser(userData);
+      const googleUser = await this.authService.validateGoogleUser(userData);
 
-    done(null, googleUser);
-    // done(null, user);
+      done(null, googleUser);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

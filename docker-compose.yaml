@@ -1,25 +1,87 @@
 services:
-  dailymart-db:
-    image: postgres:latest
-    container_name: dailymart-db
+  dailymart-backend:
+    container_name: dailymart-backend
+    build:
+      context: .
+      target: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/app
+      - /app/node_modules
     environment:
-      - POSTGRES_USER=dailymart
-      - POSTGRES_PASSWORD=dailymart@123
-      - POSTGRES_DB=dailymart
+      NODE_ENV: development
+      MONGODB_URI: mongodb://root:example@familykart-mongo:27017/familykart?authSource=admin
+      REDIS_HOST: familykart-redis
+      REDIS_PORT: 6379
+      PG_HOST: familykart-postgres
+      PG_PORT: 5432
+      PG_USER: dailymart
+      PG_PASS: dailymart@123
+      PG_DB: dailymart
+      JWT_SECRET: supersecret123
+
+    depends_on:
+      - familykart-redis
+      - familykart-postgres
+      - familykart-mongo
+      # redis:
+      #   condition: service_healthy
+      # dailymart-db:
+      #   condition: service_healthy
+      # dailymart-mongo:
+      #   condition: service_healthy
+
+  familykart-mongo:
+    image: mongo:latest
+    container_name: familykart-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGODB_URI: mongodb://root:example@mongo:27017/familykart?authSource=admin
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '5544:27017'
+    healthcheck:
+      test: ['CMD', 'mongo', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  familykart-postgres:
+    image: postgres:latest
+    container_name: familykart-postgres
+    environment:
+      POSTGRES_USER: dailymart
+      POSTGRES_PASSWORD: dailymart@123
+      POSTGRES_DB: dailymart
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - '5555:5432'
+    # healthcheck:
+    #   test: ['CMD-SHELL', 'pg_isready -U dailymart']
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
 
-  redis:
+  familykart-redis:
     image: redis/redis-stack:latest
-    container_name: redis
+    container_name: familykart-redis
     volumes:
       - redis_data:/data
     ports:
       - '6379:6379'
       - '8001:8001'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   postgres_data:
   redis_data:
+  mongo_data:

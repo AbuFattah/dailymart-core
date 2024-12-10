@@ -24,7 +24,7 @@ export class StockHistoryProcessor implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const connection = {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: process.env.REDIS_HOST || 'familykart-redis',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       //   password: process.env.REDIS_PASSWORD,
     };
