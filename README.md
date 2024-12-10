@@ -1,30 +1,76 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# NestJS E-Commerce API
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is a comprehensive and scalable E-Commerce API built with NestJS, following SOLID and clean code principles and leveraging a modular design for ease of maintenance and extensibility. The system combines PostgreSQL and MongoDB to optimize data storage and management while integrating Redis for caching and BullMQ for asynchronous task processing.
+
+CI/CD pipelines will be implemented in the near future to automate testing, integration, and deployment. Additionally, Kubernetes will be used to manage containerized deployments, ensuring scalability and reliability in production environments.
+
+## Features
+
+### **User Management**
+
+- **User Registration**: Create new user accounts.
+- **User Login/Logout**: Secure authentication and session management.
+- **User Profile Management**: View and update user details.
+- **Password Reset**: Securely reset forgotten passwords.
+- **Role Management**: Manage user roles (e.g., Admin, Customer).
+
+### **Product Management**
+
+- **Product Creation**: Add new products to the store.
+- **Product Listing**: View a paginated list of products.
+- **Product Details**: Fetch detailed product information.
+- **Product Update/Delete**: Modify or remove products.
+
+### **Category Management**
+
+- **Department, Category and Subcategory Creation**: Manage hierarchical categories stored in MongoDB.
+- **Category Updates**: Asynchronous updates to maintain consistency in product records.
+
+### **Inventory Management**
+
+- **Stock Tracking**: Monitor stock levels for products.
+- **Stock History Processing**: Use BullMQ to handle inventory updates asynchronously, optimizing performance.
+
+### **Order Management**
+
+- **Order Placement**: Create new orders.
+- **Order History**: View past orders.
+- **Order Tracking**: Track the status of current orders.
+- **Order Cancellation/Returns**: Handle order modifications and returns and update inventory accordingly.
+
+### **Shopping Cart**
+
+- **Cart Management**: Add, update, or remove items from the cart. Users can store items in the cart even without logging in, and once logged in, the local cart will automatically merge with the user’s existing cart.
+- **Cart Summary**: View current cart details, including total cost.
+- **Checkout Process**: Seamless checkout experience.
+
+### **Search and Filtering**
+
+- **Product Search**: Quickly find products by name or description.
+- **Product Filtering**: Narrow down products by category, price, rating, and more.
+
+---
+
+## Architecture Highlights
+
+- **Polyglot Persistence**:
+  - PostgreSQL for relational data like users, orders, and products.
+  - MongoDB for managing hierarchical category data.
+- **Caching with Redis**: Enhances performance by reducing redundant API calls for frequently accessed data.
+- **Event-Driven Design**: Promotes eventual consistency through asynchronous updates.
+- **Task Processing with BullMQ**: Efficiently handles background tasks like stock history updates and category name synchronization.
+- **Modular Design**: Each feature is encapsulated in its module, promoting scalability and maintainability.
+
+---
+
+## Set Up Local Development Environment Using Docker compose
+
+```bash
+# Set Up Local development environment
+$ docker compose up
+```
 
 ## Project setup
 
@@ -58,28 +104,12 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Author - [Abu Fattah Hossain](https://www.linkedin.com/in/abufattahnahid/)
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+MIT License
