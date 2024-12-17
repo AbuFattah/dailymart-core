@@ -6,6 +6,13 @@ This is a comprehensive and scalable E-Commerce API built with NestJS, following
 
 CI/CD pipelines will be implemented in the near future to automate testing, integration, and deployment. Additionally, Kubernetes will be used to manage containerized deployments, ensuring scalability and reliability in production environments.
 
+
+## Table of contents
+
+- [Features](#features)
+- [Architecture Highlights](#architecture-highlights)
+- [Project setup](#project-setup)
+
 ## Features
 
 ### **User Management**
